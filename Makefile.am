@@ -2,7 +2,7 @@ SUBDIRS = data po src
 
 EXTRA_DIST = \
 	autogen.sh \
-	lightdm-gtk-greeter.doap
+	lightdm-xfce4-greeter.doap
 
 DISTCLEANFILES = \
 	Makefile.in \

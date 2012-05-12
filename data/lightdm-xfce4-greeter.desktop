@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LightDM Xfce4 Greeter
+Comment=This runs the xfce4 greeter, it should only be run from LightDM
+Exec=lightdm-xfce4-greeter
+Type=Application
+X-Ubuntu-Gettext-Domain=lightdm

@@ -1,14 +1,14 @@
-greeterdatadir = $(datadir)/lightdm-gtk-greeter
+greeterdatadir = $(datadir)/lightdm-xfce4-greeter
 dist_greeterdata_DATA = greeter.ui
 
 xgreetersdir = $(datadir)/xgreeters
-dist_xgreeters_DATA = lightdm-gtk-greeter.desktop
+dist_xgreeters_DATA = lightdm-xfce4-greeter.desktop
 
 icondir = $(greeterdatadir)/hicolor/scalable/apps
 dist_icon_DATA = accessibility.svg system-shutdown.svg
 
 configdir = $(sysconfdir)/lightdm
-dist_config_DATA = lightdm-gtk-greeter.conf
+dist_config_DATA = lightdm-xfce4-greeter.conf
 
 DISTCLEANFILES = \
 	Makefile.in

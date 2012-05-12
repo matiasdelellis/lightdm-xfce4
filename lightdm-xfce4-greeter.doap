@@ -4,8 +4,8 @@
          xmlns:gnome="http://api.gnome.org/doap-extensions#"
          xmlns="http://usefulinc.com/ns/doap#">
 
-  <name xml:lang="en">lightdm-gtk-greeter</name>
-  <shortdesc xml:lang="en">LightDM GTK+ Greeter</shortdesc>
+  <name xml:lang="en">lightdm-xfce4-greeter</name>
+  <shortdesc xml:lang="en">LightDM Xfce4 Greeter</shortdesc>
   <homepage rdf:resource="https://launchpad.net/lightdm-gtk-greeter" />
   <download-page rdf:resource="https://launchpad.net/lightdm-gtk-greeter/+download" />
   <bug-database rdf:resource="https://bugs.launchpad.net/lightdm-gtk-greeter" />

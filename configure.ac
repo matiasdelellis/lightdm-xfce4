@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(lightdm-gtk-greeter, 1.1.5)
+AC_INIT(lightdm-xfce4-greeter, 1.1.5)
 AC_CONFIG_MACRO_DIR(m4)
 AC_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -10,9 +10,7 @@ AM_MAINTAINER_MODE
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES(yes)])
 
 GOBJECT_INTROSPECTION_CHECK(0.9.5)
-
-GNOME_COMPILE_WARNINGS(maximum)
-
+ 
 dnl ###########################################################################
 dnl Dependencies
 dnl ###########################################################################
@@ -29,7 +27,7 @@ dnl Internationalization
 dnl ###########################################################################
 
 IT_PROG_INTLTOOL(0.35.0)
-AC_SUBST(GETTEXT_PACKAGE, lightdm-gtk-greeter)
+AC_SUBST(GETTEXT_PACKAGE, lightdm-xfce4-greeter)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", Gettext package)
 
 dnl ###########################################################################
