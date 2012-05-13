@@ -722,8 +722,9 @@ main (int argc, char **argv)
     gdk_window_set_cursor (gdk_get_default_root_window (), gdk_cursor_new (GDK_LEFT_PTR));
 
     /* Load background */
-    #if GTK_CHECK_VERSION (3, 0, 0)
+
     value = g_key_file_get_value (config, "greeter", "background", NULL);
+    #if GTK_CHECK_VERSION (3, 0, 0)
     if (!value)
         value = g_strdup ("#000000");
     if (!gdk_rgba_parse (&background_color, value))
