@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+_Name=Configure Lightdm
+_Comment=Configure the Xfce4 lightdm greeter.
+Exec=xfce4-lightdm-settings
+Icon=system-users
+Terminal=false
+Type=Application
+Categories=X-XFCE;Settings;DesktopSettings;X-XfceSettingsDialog;
+StartupNotify=true
+OnlyShowIn=XFCE;
+X-XfcePluggable=true
+X-XfceHelpFile=xfce4-settings.html

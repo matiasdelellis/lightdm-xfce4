@@ -12,7 +12,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES(yes)])
 GOBJECT_INTROSPECTION_CHECK(0.9.5)
  
 dnl ###########################################################################
-dnl Dependencies
+dnl Dependencies to greeter
 dnl ###########################################################################
 
 AC_ARG_WITH([gtk3],
@@ -26,6 +26,12 @@ PKG_CHECK_MODULES(GREETER, [
     liblightdm-gobject-1
     gmodule-export-2.0
 ])
+
+dnl ###########################################################################
+dnl Dependencies to dialog
+dnl ###########################################################################
+XDT_CHECK_PACKAGE([GTK], [gtk+-2.0], [2.20.0])
+XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-1], [4.9.0])
 
 dnl ###########################################################################
 dnl Internationalization
@@ -43,6 +49,7 @@ AC_CONFIG_FILES([
 Makefile
 data/Makefile
 po/Makefile.in
+settings/Makefile
 src/Makefile
 ])
 AC_OUTPUT
