@@ -674,7 +674,9 @@ main (int argc, char **argv)
     GtkWidget *menuitem, *hbox, *image;
     gchar *value, *state_dir;
     GdkPixbuf *background_pixbuf = NULL;
+    #if GTK_CHECK_VERSION (3, 0, 0)
     GdkRGBA background_color;
+    #endif
     gint i;
     GError *error = NULL;
 
@@ -720,10 +722,12 @@ main (int argc, char **argv)
     gdk_window_set_cursor (gdk_get_default_root_window (), gdk_cursor_new (GDK_LEFT_PTR));
 
     /* Load background */
+    #if GTK_CHECK_VERSION (3, 0, 0)
     value = g_key_file_get_value (config, "greeter", "background", NULL);
     if (!value)
         value = g_strdup ("#000000");
     if (!gdk_rgba_parse (&background_color, value))
+    #endif
     {
         gchar *path;
         GError *error = NULL;
@@ -740,9 +744,11 @@ main (int argc, char **argv)
         g_clear_error (&error);
         g_free (path);
     }
+    #if GTK_CHECK_VERSION (3, 0, 0)
     else
         g_debug ("Using background color %s", value);
     g_free (value);
+    #endif
 
     /* Set the background */
     for (i = 0; i < gdk_display_get_n_screens (gdk_display_get_default ()); i++)
@@ -766,8 +772,11 @@ main (int argc, char **argv)
                 gdk_cairo_set_source_pixbuf (c, pixbuf, monitor_geometry.x, monitor_geometry.y);
                 g_object_unref (pixbuf);
             }
+            #if GTK_CHECK_VERSION (3, 0, 0)
             else
                 gdk_cairo_set_source_rgba (c, &background_color);
+            #endif
+
             cairo_paint (c);
         }
 
@@ -841,7 +850,12 @@ main (int argc, char **argv)
 
     /* Glade can't handle custom menuitems, so set them up manually */
     menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "power_menuitem"));
+    #if GTK_CHECK_VERSION (3, 0, 0)
     hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+    #else
+    hbox = gtk_hbox_new (FALSE, 0);
+    #endif
+
     gtk_widget_show (hbox);
     gtk_container_add (GTK_CONTAINER (menuitem), hbox);
     image = gtk_image_new_from_icon_name ("system-shutdown", GTK_ICON_SIZE_MENU);
@@ -849,7 +863,11 @@ main (int argc, char **argv)
     gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, TRUE, 0);
 
     menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "a11y_menuitem"));
+    #if GTK_CHECK_VERSION (3, 0, 0)
     hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+    #else
+    hbox = gtk_hbox_new (FALSE, 0);
+    #endif
     gtk_widget_show (hbox);
     gtk_container_add (GTK_CONTAINER (menuitem), hbox);
     image = gtk_image_new_from_icon_name ("accessibility", GTK_ICON_SIZE_MENU);

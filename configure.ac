@@ -15,8 +15,13 @@ dnl ###########################################################################
 dnl Dependencies
 dnl ###########################################################################
 
+AC_ARG_WITH([gtk3],
+            [AS_HELP_STRING([--with-gtk3],
+            [enable experimental support for gtk3])],
+            [GTK_VER="gtk+-3.0"],[GTK_VER="gtk+-2.0"])
+
 PKG_CHECK_MODULES(GREETER, [
-    gtk+-3.0
+    $GTK_VER
     x11
     liblightdm-gobject-1
     gmodule-export-2.0
@@ -41,3 +46,10 @@ po/Makefile.in
 src/Makefile
 ])
 AC_OUTPUT
+
+echo ""
+echo "Build Configuration for $PACKAGE version $VERSION"
+echo ""
+echo "  Prefix.....: ${prefix}"
+echo "  Gtk version: ${GTK_VER}"
+echo ""

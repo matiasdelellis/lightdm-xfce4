@@ -4,7 +4,7 @@
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
-PKG_NAME="lightdm-gtk-greeter"
+PKG_NAME="lightdm-xfce4-greeter"
 REQUIRED_AUTOMAKE_VERSION=1.7
 
 (test -f $srcdir/configure.ac \
