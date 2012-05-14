@@ -57,6 +57,46 @@ static GOptionEntry    opt_entries[] =
     { NULL }
 };
 
+static void
+lightdm_settings_update (GtkBuilder *builder)
+{
+    GKeyFile *config;
+    gchar *value = NULL;
+    GError *error = NULL;
+    GObject *object;
+
+    g_return_if_fail (GTK_IS_BUILDER (builder));
+
+    config = g_key_file_new ();
+    g_key_file_load_from_file (config, CONFIG_FILE, G_KEY_FILE_NONE, &error);
+    if (error && !g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+        g_warning ("Failed to load configuration from %s: %s\n", CONFIG_FILE, error->message);
+    g_clear_error (&error);
+
+    object = gtk_builder_get_object (builder, "background-filechooser");
+    g_return_if_fail (GTK_IS_FILE_CHOOSER_BUTTON (object));
+    value = g_key_file_get_string(config, "greeter", "background", NULL);
+    if (value)
+          gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(object), value);
+
+    object = gtk_builder_get_object (builder, "lang-checkbutton");
+    g_return_if_fail (GTK_IS_CHECK_BUTTON (object));
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(object),
+        g_key_file_get_boolean (config, "greeter", "show-language-selector", NULL));
+
+    object = gtk_builder_get_object (builder, "theme-entry");
+    g_return_if_fail (GTK_IS_ENTRY (object));
+    value = g_key_file_get_value (config, "greeter", "theme-name", NULL);
+    if (value)
+        gtk_entry_set_text (GTK_ENTRY(object), value);
+
+    object = gtk_builder_get_object (builder, "font-button");
+    g_return_if_fail (GTK_IS_FONT_BUTTON (object));
+    value = g_key_file_get_value (config, "greeter", "gtk-font-name", NULL);
+    if (value)
+        gtk_font_button_set_font_name (GTK_FONT_BUTTON(object), value);
+}
+
 gint
 main (gint argc, gchar **argv)
 {
@@ -111,6 +151,8 @@ main (gint argc, gchar **argv)
     if (gtk_builder_add_from_string (builder, lightdm_dialog_ui,
                                      lightdm_dialog_ui_length, &error) != 0)
     {
+        lightdm_settings_update(builder);
+
         /* Wait for the manager to complete... */
         if (G_UNLIKELY (opt_socket_id == 0))
         {

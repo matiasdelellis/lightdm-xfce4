@@ -125,7 +125,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkCheckButton" id="lagn-checkbutton">
+              <object class="GtkCheckButton" id="lang-checkbutton">
                 <property name="label" translatable="yes">Show language selector</property>
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
@@ -169,7 +169,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkFontButton" id="fontbutton">
+              <object class="GtkFontButton" id="font-button">
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
