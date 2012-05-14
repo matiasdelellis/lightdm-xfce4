@@ -668,7 +668,7 @@ main (int argc, char **argv)
     GdkRectangle monitor_geometry;
     GtkBuilder *builder;
     GtkTreeModel *model;
-    const GList *items, *item;
+    GList *items, *item;
     GtkTreeIter iter;
     GtkCellRenderer *renderer;
     GtkWidget *menuitem, *hbox, *image;
@@ -889,11 +889,14 @@ main (int argc, char **argv)
     gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (session_combo), renderer, "text", 0);
     model = gtk_combo_box_get_model (session_combo);
     items = lightdm_get_sessions ();
+
+    if(g_list_length(items) > 1)
+        gtk_widget_show (GTK_WIDGET (session_combo));
+
     for (item = items; item; item = item->next)
     {
         LightDMSession *session = item->data;
 
-        gtk_widget_show (GTK_WIDGET (session_combo));
         gtk_list_store_append (GTK_LIST_STORE (model), &iter);
         gtk_list_store_set (GTK_LIST_STORE (model), &iter,
                             0, lightdm_session_get_name (session),
