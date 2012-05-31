@@ -19,6 +19,14 @@
 
 #include "lightdm.h"
 
+enum user_colums {
+    U_NAME = 0,
+    U_PIXBUF,
+    U_DISPLAYNAME,
+    U_WEIGHT,
+    N_U_COLUMS
+};
+
 static LightDMGreeter *greeter;
 static GKeyFile *state;
 static gchar *state_filename;
@@ -416,15 +424,32 @@ user_added_cb (LightDMUserList *user_list, LightDMUser *user)
 {
     GtkTreeModel *model;
     GtkTreeIter iter;
+    const gchar *image;
+    GdkPixbuf *pixbuf = NULL;
+
+    image = lightdm_user_get_image (user);
+    if (image)
+        pixbuf = gdk_pixbuf_new_from_file_at_scale (image, 48, 48, TRUE, NULL);
+    if (!pixbuf)
+        pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
+                                           "avatar-default",
+                                           48,
+                                           GTK_ICON_LOOKUP_USE_BUILTIN,
+                                           NULL);
+    /*if (!pixbuf)
+    {
+        pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 48, 48);
+        memset (gdk_pixbuf_get_pixels (pixbuf), 0, gdk_pixbuf_get_height (pixbuf) * gdk_pixbuf_get_rowstride (pixbuf) * gdk_pixbuf_get_n_channels (pixbuf));
+    }*/
 
     model = gtk_tree_view_get_model (user_view);
 
     gtk_list_store_append (GTK_LIST_STORE (model), &iter);
     gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                        0, lightdm_user_get_name (user),
-                        1, lightdm_user_get_display_name (user),
-                        2, lightdm_user_get_logged_in (user) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
-                        /*3, pixbuf,*/
+                        U_NAME, lightdm_user_get_name (user),
+                        U_PIXBUF, pixbuf,
+                        U_DISPLAYNAME, lightdm_user_get_display_name (user),
+                        U_WEIGHT, lightdm_user_get_logged_in (user) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
                         -1);
 }
 
@@ -457,16 +482,34 @@ user_changed_cb (LightDMUserList *user_list, LightDMUser *user)
 {
     GtkTreeModel *model;
     GtkTreeIter iter;
+    const gchar *image;
+    GdkPixbuf *pixbuf = NULL;
 
     if (!get_user_iter (lightdm_user_get_name (user), &iter))
         return;
 
+    image = lightdm_user_get_image (user);
+    if (image)
+        pixbuf = gdk_pixbuf_new_from_file_at_scale (image, 48, 48, TRUE, NULL);
+    if (!pixbuf)
+        pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
+                                           "avatar-default",
+                                           48,
+                                           GTK_ICON_LOOKUP_USE_BUILTIN,
+                                           NULL);
+    /*if (!pixbuf)
+    {
+        pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 48, 48);
+        memset (gdk_pixbuf_get_pixels (pixbuf), 0, gdk_pixbuf_get_height (pixbuf) * gdk_pixbuf_get_rowstride (pixbuf) * gdk_pixbuf_get_n_channels (pixbuf));
+    }*/
+
     model = gtk_tree_view_get_model (user_view);
+
     gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                        0, lightdm_user_get_name (user),
-                        1, lightdm_user_get_display_name (user),
-                        2, lightdm_user_get_logged_in (user) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
-                        /*3, pixbuf,*/
+                        U_NAME, lightdm_user_get_name (user),
+                        U_PIXBUF, pixbuf,
+                        U_DISPLAYNAME, lightdm_user_get_display_name (user),
+                        U_WEIGHT, lightdm_user_get_logged_in (user) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
                         -1);
 }
 
@@ -539,59 +582,72 @@ load_user_list ()
     GtkTreeIter iter;
     gchar *last_user;
     const gchar *selected_user;
+    GdkPixbuf *pixbuf = NULL;
 
     g_signal_connect (lightdm_user_list_get_instance (), "user-added", G_CALLBACK (user_added_cb), NULL);
     g_signal_connect (lightdm_user_list_get_instance (), "user-changed", G_CALLBACK (user_changed_cb), NULL);
     g_signal_connect (lightdm_user_list_get_instance (), "user-removed", G_CALLBACK (user_removed_cb), NULL);
 
     model = gtk_tree_view_get_model (user_view);
+
     items = lightdm_user_list_get_users (lightdm_user_list_get_instance ());
     for (item = items; item; item = item->next)
     {
         LightDMUser *user = item->data;
         const gchar *image;
-        GdkPixbuf *pixbuf = NULL;
 
         image = lightdm_user_get_image (user);
         if (image)
-            pixbuf = gdk_pixbuf_new_from_file_at_scale (image, 64, 64, TRUE, NULL);
+            pixbuf = gdk_pixbuf_new_from_file_at_scale (image, 48, 48, TRUE, NULL);
         if (!pixbuf)
             pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                               "stock_person",
-                                               64,
+                                               "avatar-default",
+                                               48,
                                                GTK_ICON_LOOKUP_USE_BUILTIN,
                                                NULL);
         /*if (!pixbuf)
         {
-            pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 64, 64);
+            pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 48, 48);
             memset (gdk_pixbuf_get_pixels (pixbuf), 0, gdk_pixbuf_get_height (pixbuf) * gdk_pixbuf_get_rowstride (pixbuf) * gdk_pixbuf_get_n_channels (pixbuf));
         }*/
 
         gtk_list_store_append (GTK_LIST_STORE (model), &iter);
         gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                            0, lightdm_user_get_name (user),
-                            1, lightdm_user_get_display_name (user),
-                            2, lightdm_user_get_logged_in (user) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
-                            3, pixbuf,
-                            -1);
-    }
-    if (lightdm_greeter_get_has_guest_account_hint (greeter))
-    {
-        gtk_list_store_append (GTK_LIST_STORE (model), &iter);
-        gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                            0, "*guest",
-                            1, _("Guest Account"),
-                            2, PANGO_WEIGHT_NORMAL,
-                            3, gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), "stock_person", 64, 0, NULL),
+                            U_NAME, lightdm_user_get_name (user),
+                            U_PIXBUF, pixbuf,
+                            U_DISPLAYNAME, lightdm_user_get_display_name (user),
+                            U_WEIGHT, lightdm_user_get_logged_in (user) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
                             -1);
     }
 
+    if (lightdm_greeter_get_has_guest_account_hint (greeter))
+    {
+        pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
+                                           "avatar-default",
+                                           48,
+                                           0,
+                                           NULL),
+        gtk_list_store_append (GTK_LIST_STORE (model), &iter);
+        gtk_list_store_set (GTK_LIST_STORE (model), &iter,
+                            U_NAME, "*guest",
+                            U_PIXBUF, pixbuf,
+                            U_DISPLAYNAME, _("Guest Account"),
+                            U_WEIGHT, PANGO_WEIGHT_NORMAL,
+                            -1);
+    }
+
+    pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
+                                       "avatar-default",
+                                       48,
+                                       0,
+                                       NULL),
+
     gtk_list_store_append (GTK_LIST_STORE (model), &iter);
     gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                        0, "*other",
-                        1, _("Other..."),
-                        2, PANGO_WEIGHT_NORMAL,
-                        3, gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), "stock_person", 64, 0, NULL),
+                        U_NAME, "*other",
+                        U_PIXBUF, pixbuf,
+                        U_DISPLAYNAME, _("Other..."),
+                        U_WEIGHT, PANGO_WEIGHT_NORMAL,
                         -1);
 
     last_user = g_key_file_get_value (state, "greeter", "last-user", NULL);
@@ -674,6 +730,8 @@ main (int argc, char **argv)
     GtkTreeModel *model;
     GList *items, *item;
     GtkTreeIter iter;
+    GtkListStore *store;
+    GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
     GtkWidget *menuitem, *hbox, *image;
     gchar *value, *state_dir;
@@ -950,8 +1008,26 @@ main (int argc, char **argv)
     }
 
     user_view = GTK_TREE_VIEW (gtk_builder_get_object (builder, "user_treeview"));
-    gtk_tree_view_insert_column_with_attributes (user_view, 0, "Face", gtk_cell_renderer_pixbuf_new(), "pixbuf", 3, NULL);
-    gtk_tree_view_insert_column_with_attributes (user_view, 1, "Name", gtk_cell_renderer_text_new(), "text", 1, "weight", 2, NULL);
+
+    store = gtk_list_store_new (N_U_COLUMS,
+    					  G_TYPE_STRING,
+    					  GDK_TYPE_PIXBUF,
+    					  G_TYPE_STRING,
+    					  G_TYPE_INT);
+
+    gtk_tree_view_set_model(GTK_TREE_VIEW(user_view), GTK_TREE_MODEL(store));
+
+    column = gtk_tree_view_column_new();
+
+    renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_tree_view_column_pack_start(column, renderer, FALSE);
+    gtk_tree_view_column_set_attributes(column, renderer, "pixbuf", U_PIXBUF, NULL);
+
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_attributes(column, renderer, "text", U_DISPLAYNAME, "weight", U_WEIGHT, NULL);
+
+    gtk_tree_view_append_column(GTK_TREE_VIEW(user_view), column);
 
     if (lightdm_greeter_get_hide_users_hint (greeter))
         start_authentication ("*other");
