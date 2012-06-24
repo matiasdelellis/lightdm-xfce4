@@ -9,157 +9,26 @@
  * license.
  */
 
-#include <stdlib.h>
-#include <locale.h>
-#include <gtk/gtk.h>
-#include <glib/gi18n.h>
-#include <cairo-xlib.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <gdk/gdkx.h>
+#include "lightdm-xfce4-greeter.h"
 
-#include "lightdm.h"
-
-enum user_colums {
-    U_NAME = 0,
-    U_PIXBUF,
-    U_DISPLAYNAME,
-    U_WEIGHT,
-    N_U_COLUMS
-};
-
-static LightDMGreeter *greeter;
-static GKeyFile *state;
-static gchar *state_filename;
-static GtkWindow *login_window, *panel_window;
-static GtkLabel *message_label, *prompt_label;
-static GtkTreeView *user_view;
-static GtkWidget *login_box, *prompt_box;
-static GtkEntry *prompt_entry;
-static GtkComboBox *session_combo;
-static GtkComboBox *language_combo;
-static gchar *default_font_name, *default_theme_name;
-static gboolean cancelling = FALSE, prompted = FALSE;
-
-static gchar *
-get_session ()
-{
-    GtkTreeIter iter;
-    gchar *session;
-
-    if (!gtk_combo_box_get_active_iter (session_combo, &iter))
-        return g_strdup (lightdm_greeter_get_default_session_hint (greeter));
-
-    gtk_tree_model_get (gtk_combo_box_get_model (session_combo), &iter, 1, &session, -1);
-
-    return session;
-}
-
-static void
-set_session (const gchar *session)
-{
-    GtkTreeModel *model = gtk_combo_box_get_model (session_combo);
-    GtkTreeIter iter;
-    const gchar *default_session;
-
-    if (session && gtk_tree_model_get_iter_first (model, &iter))
-    {
-        do
-        {
-            gchar *s;
-            gboolean matched;
-            gtk_tree_model_get (model, &iter, 1, &s, -1);
-            matched = strcmp (s, session) == 0;
-            g_free (s);
-            if (matched)
-            {
-                gtk_combo_box_set_active_iter (session_combo, &iter);
-                return;
-            }
-        } while (gtk_tree_model_iter_next (model, &iter));
-    }
-
-    /* If failed to find this session, then try the default */
-    default_session = lightdm_greeter_get_default_session_hint (greeter);
-    if (default_session && g_strcmp0 (session, default_session) != 0)
-    {
-        set_session (lightdm_greeter_get_default_session_hint (greeter));
-        return;
-    }
-
-    /* Otherwise just pick the first session */
-    gtk_combo_box_set_active (session_combo, 0);
-}
-
-static gchar *
-get_language ()
-{
-    GtkTreeIter iter;
-    gchar *language;
-
-    if (!gtk_combo_box_get_active_iter (language_combo, &iter))
-        return NULL;
-
-    gtk_tree_model_get (gtk_combo_box_get_model (language_combo), &iter, 1, &language, -1);
-
-    return language;
-}
-
-static void
-set_language (const gchar *language)
-{
-    GtkTreeModel *model = gtk_combo_box_get_model (language_combo);
-    GtkTreeIter iter;
-    const gchar *default_language = NULL;
-
-    if (language && gtk_tree_model_get_iter_first (model, &iter))
-    {
-        do
-        {
-            gchar *s;
-            gboolean matched;
-            gtk_tree_model_get (model, &iter, 1, &s, -1);
-            matched = strcmp (s, language) == 0;
-            g_free (s);
-            if (matched)
-            {
-                gtk_combo_box_set_active_iter (language_combo, &iter);
-                return;
-            }
-        } while (gtk_tree_model_iter_next (model, &iter));
-    }
-
-    /* If failed to find this language, then try the default */
-    if (lightdm_get_language ())
-        default_language = lightdm_language_get_code (lightdm_get_language ());
-    if (default_language && g_strcmp0 (default_language, language) != 0)
-        set_language (default_language);
-}
-
-static void
-set_message_label (const gchar *text)
-{
-    gtk_widget_set_visible (GTK_WIDGET (message_label), strcmp (text, "") != 0);
-    gtk_label_set_text (message_label, text);
-}
-
-static void
-start_authentication (const gchar *username)
+void
+start_authentication (struct greeter_xfce4 *xfce4_greeter, const gchar *username)
 {
     gchar *data;
     gsize data_length;
     GError *error = NULL;
 
-    cancelling = FALSE;
-    prompted = FALSE;
+    xfce4_greeter->cancelling = FALSE;
+    xfce4_greeter->prompted = FALSE;
 
-    g_key_file_set_value (state, "greeter", "last-user", username);
-    data = g_key_file_to_data (state, &data_length, &error);
+    g_key_file_set_value (xfce4_greeter->state, "greeter", "last-user", username);
+    data = g_key_file_to_data (xfce4_greeter->state, &data_length, &error);
     if (error)
         g_warning ("Failed to save state file: %s", error->message);
     g_clear_error (&error);
     if (data)
     {
-        g_file_set_contents (state_filename, data, data_length, &error);
+        g_file_set_contents (xfce4_greeter->state_filename, data, data_length, &error);
         if (error)
             g_warning ("Failed to save state file: %s", error->message);
         g_clear_error (&error);
@@ -168,11 +37,11 @@ start_authentication (const gchar *username)
 
     if (strcmp (username, "*other") == 0)
     {
-        lightdm_greeter_authenticate (greeter, NULL);
+        lightdm_greeter_authenticate (xfce4_greeter->greeter, NULL);
     }
     else if (strcmp (username, "*guest") == 0)
     {
-        lightdm_greeter_authenticate_as_guest (greeter);
+        lightdm_greeter_authenticate_as_guest (xfce4_greeter->greeter);
     }
     else
     {
@@ -181,391 +50,123 @@ start_authentication (const gchar *username)
         user = lightdm_user_list_get_user_by_name (lightdm_user_list_get_instance (), username);
         if (user)
         {
-            set_session (lightdm_user_get_session (user));
-            set_language (lightdm_user_get_language (user));
+            set_session (xfce4_greeter, lightdm_user_get_session (user));
+            set_language (xfce4_greeter, lightdm_user_get_language (user));
         }
         else
         {
-            set_session (NULL);
-            set_language (NULL);
+            set_session (xfce4_greeter, NULL);
+            set_language (xfce4_greeter, NULL);
         }
 
-        lightdm_greeter_authenticate (greeter, username);
+        lightdm_greeter_authenticate (xfce4_greeter->greeter, username);
     }
 }
 
 static void
-cancel_authentication (void)
+cancel_authentication (struct greeter_xfce4 *xfce4_greeter)
 {
     /* If in authentication then stop that first */
-    cancelling = FALSE;
-    if (lightdm_greeter_get_in_authentication (greeter))
+    xfce4_greeter->cancelling = FALSE;
+    if (lightdm_greeter_get_in_authentication (xfce4_greeter->greeter))
     {
-        cancelling = TRUE;
-        lightdm_greeter_cancel_authentication (greeter);
-        set_message_label ("");
+        xfce4_greeter->cancelling = TRUE;
+        lightdm_greeter_cancel_authentication (xfce4_greeter->greeter);
+        set_message_label (xfce4_greeter, "");
     }
 
     /* Start a new login or return to the user list */
-    if (lightdm_greeter_get_hide_users_hint (greeter))
-        start_authentication ("*other");
+    if (lightdm_greeter_get_hide_users_hint (xfce4_greeter->greeter))
+        start_authentication (xfce4_greeter, "*other");
     else
     {
-        gtk_widget_hide (login_box);
-        gtk_widget_grab_focus (GTK_WIDGET (user_view));
+        gtk_widget_hide (xfce4_greeter->login_box);
+        gtk_widget_grab_focus (GTK_WIDGET (xfce4_greeter->user_view));
     }
 }
 
 static void
-start_session (void)
+start_session (struct greeter_xfce4 *xfce4_greeter)
 {
     gchar *language;
     gchar *session;
 
-    language = get_language ();
+    language = get_language (xfce4_greeter);
     if (language)
-        lightdm_greeter_set_language (greeter, language);
+        lightdm_greeter_set_language (xfce4_greeter->greeter, language);
     g_free (language);
 
-    session = get_session ();
-    if (!lightdm_greeter_start_session_sync (greeter, session, NULL))
+    session = get_session (xfce4_greeter);
+    if (!lightdm_greeter_start_session_sync (xfce4_greeter->greeter, session, NULL))
     {
-        set_message_label (_("Failed to start session"));
-        start_authentication (lightdm_greeter_get_authentication_user (greeter));
+        set_message_label (xfce4_greeter, _("Failed to start session"));
+        start_authentication (xfce4_greeter, lightdm_greeter_get_authentication_user (xfce4_greeter->greeter));
     }
     g_free (session);
 }
 
-void user_treeview_selection_changed_cb (GtkTreeSelection *selection);
+void login_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
 G_MODULE_EXPORT
 void
-user_treeview_selection_changed_cb (GtkTreeSelection *selection)
+login_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
 {
-    GtkTreeModel *model;
-    GtkTreeIter iter;
+    gtk_widget_set_sensitive (GTK_WIDGET (xfce4_greeter->prompt_entry), FALSE);
+    set_message_label (xfce4_greeter, "");
 
-    if (gtk_tree_selection_get_selected (selection, &model, &iter))
-    {
-        gchar *user;
-
-        gtk_tree_model_get (GTK_TREE_MODEL (model), &iter, 0, &user, -1);
-        start_authentication (user);
-        g_free (user);
-    }
-}
-
-void login_cb (GtkWidget *widget);
-G_MODULE_EXPORT
-void
-login_cb (GtkWidget *widget)
-{
-    gtk_widget_set_sensitive (GTK_WIDGET (prompt_entry), FALSE);
-    set_message_label ("");
-
-    if (lightdm_greeter_get_is_authenticated (greeter))
-        start_session ();
-    else if (lightdm_greeter_get_in_authentication (greeter))
-        lightdm_greeter_respond (greeter, gtk_entry_get_text (prompt_entry));
+    if (lightdm_greeter_get_is_authenticated (xfce4_greeter->greeter))
+        start_session (xfce4_greeter);
+    else if (lightdm_greeter_get_in_authentication (xfce4_greeter->greeter))
+        lightdm_greeter_respond (xfce4_greeter->greeter, gtk_entry_get_text (xfce4_greeter->prompt_entry));
     else
-        start_authentication (lightdm_greeter_get_authentication_user (greeter));
+        start_authentication (xfce4_greeter, lightdm_greeter_get_authentication_user (xfce4_greeter->greeter));
 }
 
-void cancel_cb (GtkWidget *widget);
+void cancel_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
 G_MODULE_EXPORT
 void
-cancel_cb (GtkWidget *widget)
+cancel_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
 {
-    cancel_authentication ();
+    cancel_authentication (xfce4_greeter);
 }
 
 static void
-show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType type)
+authentication_complete_cb (LightDMGreeter *greeter, struct greeter_xfce4 *xfce4_greeter)
 {
-    prompted = TRUE;
+    gtk_entry_set_text (xfce4_greeter->prompt_entry, "");
 
-    gtk_widget_show (GTK_WIDGET (login_box));
-    gtk_label_set_text (prompt_label, dgettext ("Linux-PAM", text));
-    gtk_widget_set_sensitive (GTK_WIDGET (prompt_entry), TRUE);
-    gtk_entry_set_text (prompt_entry, "");
-    gtk_entry_set_visibility (prompt_entry, type != LIGHTDM_PROMPT_TYPE_SECRET);
-    gtk_widget_show (GTK_WIDGET (prompt_box));
-    gtk_widget_grab_focus (GTK_WIDGET (prompt_entry));
-}
-
-static void
-show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type)
-{
-    set_message_label (text);
-}
-
-static void
-authentication_complete_cb (LightDMGreeter *greeter)
-{
-    gtk_entry_set_text (prompt_entry, "");
-
-    if (cancelling)
+    if (xfce4_greeter->cancelling)
     {
-        cancel_authentication ();
+        cancel_authentication (xfce4_greeter);
         return;
     }
 
-    gtk_widget_hide (prompt_box);
-    gtk_widget_show (login_box);
+    gtk_widget_hide (xfce4_greeter->prompt_box);
+    gtk_widget_show (xfce4_greeter->login_box);
 
-    if (lightdm_greeter_get_is_authenticated (greeter))
+    if (lightdm_greeter_get_is_authenticated (xfce4_greeter->greeter))
     {
-        if (prompted)
-            start_session ();
+        if (xfce4_greeter->prompted)
+            start_session (xfce4_greeter);
     }
     else
     {
-        if (prompted)
+        if (xfce4_greeter->prompted)
         {
-            set_message_label (_("Incorrect password, please try again"));
-            start_authentication (lightdm_greeter_get_authentication_user (greeter));
+            set_message_label (xfce4_greeter, _("Incorrect password, please try again"));
+            start_authentication (xfce4_greeter, lightdm_greeter_get_authentication_user (xfce4_greeter->greeter));
         }
         else
-            set_message_label (_("Failed to authenticate"));
+            set_message_label (xfce4_greeter, _("Failed to authenticate"));
     }
 }
 
 static void
-autologin_timer_expired_cb (LightDMGreeter *greeter)
+autologin_timer_expired_cb (LightDMGreeter *greeter, struct greeter_xfce4 *xfce4_greeter)
 {
-    if (lightdm_greeter_get_autologin_guest_hint (greeter))
-        start_authentication ("*guest");
-    else if (lightdm_greeter_get_autologin_user_hint (greeter))
-        start_authentication (lightdm_greeter_get_autologin_user_hint (greeter));
-}
-
-static void
-center_window (GtkWindow *window)
-{
-    GdkScreen *screen;
-    GtkAllocation allocation;
-    GdkRectangle monitor_geometry;
-
-    screen = gtk_window_get_screen (window);
-    gdk_screen_get_monitor_geometry (screen, gdk_screen_get_primary_monitor (screen), &monitor_geometry);
-    gtk_widget_get_allocation (GTK_WIDGET (window), &allocation);
-    gtk_window_move (window,
-                     monitor_geometry.x + (monitor_geometry.width - allocation.width) / 2,
-                     monitor_geometry.y + (monitor_geometry.height - allocation.height) / 2);
-}
-
-void suspend_cb (GtkWidget *widget, LightDMGreeter *greeter);
-G_MODULE_EXPORT
-void
-suspend_cb (GtkWidget *widget, LightDMGreeter *greeter)
-{
-    lightdm_suspend (NULL);
-}
-
-void hibernate_cb (GtkWidget *widget, LightDMGreeter *greeter);
-G_MODULE_EXPORT
-void
-hibernate_cb (GtkWidget *widget, LightDMGreeter *greeter)
-{
-    lightdm_hibernate (NULL);
-}
-
-void restart_cb (GtkWidget *widget, LightDMGreeter *greeter);
-G_MODULE_EXPORT
-void
-restart_cb (GtkWidget *widget, LightDMGreeter *greeter)
-{
-    GtkWidget *dialog;
-
-    gtk_widget_hide (GTK_WIDGET (login_window));
-
-    dialog = gtk_message_dialog_new (NULL,
-                                     GTK_DIALOG_MODAL,
-                                     GTK_MESSAGE_OTHER,
-                                     GTK_BUTTONS_NONE,
-                                     "%s", _("Are you sure you want to close all programs and restart the computer?"));
-    gtk_dialog_add_buttons (GTK_DIALOG (dialog), _("Return To Login"), FALSE, _("Restart"), TRUE, NULL);
-    gtk_widget_show_all (dialog);
-    center_window (GTK_WINDOW (dialog));
-
-    if (gtk_dialog_run (GTK_DIALOG (dialog)))
-        lightdm_restart (NULL);
-
-    gtk_widget_destroy (dialog);
-    gtk_widget_show (GTK_WIDGET (login_window));
-}
-
-void shutdown_cb (GtkWidget *widget, LightDMGreeter *greeter);
-G_MODULE_EXPORT
-void
-shutdown_cb (GtkWidget *widget, LightDMGreeter *greeter)
-{
-    GtkWidget *dialog;
-
-    gtk_widget_hide (GTK_WIDGET (login_window));
-
-    dialog = gtk_message_dialog_new (NULL,
-                                     GTK_DIALOG_MODAL,
-                                     GTK_MESSAGE_OTHER,
-                                     GTK_BUTTONS_NONE,
-                                     "%s", _("Are you sure you want to close all programs and shutdown the computer?"));
-    gtk_dialog_add_buttons (GTK_DIALOG (dialog), _("Return To Login"), FALSE, _("Shutdown"), TRUE, NULL);
-    gtk_widget_show_all (dialog);
-    center_window (GTK_WINDOW (dialog));
-
-    if (gtk_dialog_run (GTK_DIALOG (dialog)))
-        lightdm_shutdown (NULL);
-
-    gtk_widget_destroy (dialog);
-    gtk_widget_show (GTK_WIDGET (login_window));
-}
-
-static void
-user_added_cb (LightDMUserList *user_list, LightDMUser *user)
-{
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    const gchar *image;
-    GdkPixbuf *pixbuf = NULL;
-
-    image = lightdm_user_get_image (user);
-    if (image)
-        pixbuf = gdk_pixbuf_new_from_file_at_scale (image, 48, 48, TRUE, NULL);
-    if (!pixbuf)
-        pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                           "avatar-default",
-                                           48,
-                                           GTK_ICON_LOOKUP_USE_BUILTIN,
-                                           NULL);
-    /*if (!pixbuf)
-    {
-        pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 48, 48);
-        memset (gdk_pixbuf_get_pixels (pixbuf), 0, gdk_pixbuf_get_height (pixbuf) * gdk_pixbuf_get_rowstride (pixbuf) * gdk_pixbuf_get_n_channels (pixbuf));
-    }*/
-
-    model = gtk_tree_view_get_model (user_view);
-
-    gtk_list_store_append (GTK_LIST_STORE (model), &iter);
-    gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                        U_NAME, lightdm_user_get_name (user),
-                        U_PIXBUF, pixbuf,
-                        U_DISPLAYNAME, lightdm_user_get_display_name (user),
-                        U_WEIGHT, lightdm_user_get_logged_in (user) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
-                        -1);
-}
-
-static gboolean
-get_user_iter (const gchar *username, GtkTreeIter *iter)
-{
-    GtkTreeModel *model;
-
-    model = gtk_tree_view_get_model (user_view);
-  
-    if (!gtk_tree_model_get_iter_first (model, iter))
-        return FALSE;
-    do
-    {
-        gchar *name;
-        gboolean matched;
-
-        gtk_tree_model_get (model, iter, 0, &name, -1);
-        matched = g_strcmp0 (name, username) == 0;
-        g_free (name);
-        if (matched)
-            return TRUE;
-    } while (gtk_tree_model_iter_next (model, iter));
-
-    return FALSE;
-}
-
-static void
-user_changed_cb (LightDMUserList *user_list, LightDMUser *user)
-{
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    const gchar *image;
-    GdkPixbuf *pixbuf = NULL;
-
-    if (!get_user_iter (lightdm_user_get_name (user), &iter))
-        return;
-
-    image = lightdm_user_get_image (user);
-    if (image)
-        pixbuf = gdk_pixbuf_new_from_file_at_scale (image, 48, 48, TRUE, NULL);
-    if (!pixbuf)
-        pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                           "avatar-default",
-                                           48,
-                                           GTK_ICON_LOOKUP_USE_BUILTIN,
-                                           NULL);
-    /*if (!pixbuf)
-    {
-        pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 48, 48);
-        memset (gdk_pixbuf_get_pixels (pixbuf), 0, gdk_pixbuf_get_height (pixbuf) * gdk_pixbuf_get_rowstride (pixbuf) * gdk_pixbuf_get_n_channels (pixbuf));
-    }*/
-
-    model = gtk_tree_view_get_model (user_view);
-
-    gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                        U_NAME, lightdm_user_get_name (user),
-                        U_PIXBUF, pixbuf,
-                        U_DISPLAYNAME, lightdm_user_get_display_name (user),
-                        U_WEIGHT, lightdm_user_get_logged_in (user) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
-                        -1);
-}
-
-static void
-user_removed_cb (LightDMUserList *user_list, LightDMUser *user)
-{
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-
-    if (!get_user_iter (lightdm_user_get_name (user), &iter))
-        return;
-
-    model = gtk_tree_view_get_model (user_view);  
-    gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
-}
-
-void a11y_font_cb (GtkWidget *widget);
-G_MODULE_EXPORT
-void
-a11y_font_cb (GtkWidget *widget)
-{
-    if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (widget)))
-    {
-        gchar *font_name, **tokens;
-        guint length;
-
-        g_object_get (gtk_settings_get_default (), "gtk-font-name", &font_name, NULL);
-        tokens = g_strsplit (font_name, " ", -1);
-        length = g_strv_length (tokens);
-        if (length > 1)        {
-            gint size = atoi (tokens[length - 1]);
-            if (size > 0)
-            {
-                g_free (tokens[length - 1]);
-                tokens[length - 1] = g_strdup_printf ("%d", size + 10);
-                g_free (font_name);
-                font_name = g_strjoinv (" ", tokens);
-            }
-        }
-        g_strfreev (tokens);
-
-        g_object_set (gtk_settings_get_default (), "gtk-font-name", font_name, NULL);
-    }
-    else
-        g_object_set (gtk_settings_get_default (), "gtk-font-name", default_font_name, NULL);
-}
-
-void a11y_contrast_cb (GtkWidget *widget);
-G_MODULE_EXPORT
-void
-a11y_contrast_cb (GtkWidget *widget)
-{
-    if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (widget)))
-        g_object_set (gtk_settings_get_default (), "gtk-theme-name", "HighContrastInverse", NULL);
-    else
-        g_object_set (gtk_settings_get_default (), "gtk-theme-name", default_theme_name, NULL);
+    if (lightdm_greeter_get_autologin_guest_hint (xfce4_greeter->greeter))
+        start_authentication (xfce4_greeter, "*guest");
+    else if (lightdm_greeter_get_autologin_user_hint (xfce4_greeter->greeter))
+        start_authentication (xfce4_greeter, lightdm_greeter_get_autologin_user_hint (xfce4_greeter->greeter));
 }
 
 static void
@@ -574,173 +175,53 @@ sigterm_cb (int signum)
     exit (0);
 }
 
-static void
-load_user_list ()
+void
+init_config_files (struct greeter_xfce4 *xfce4_greeter)
 {
-    const GList *items, *item;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    gchar *last_user;
-    const gchar *selected_user;
-    GdkPixbuf *pixbuf = NULL;
+    GError *error = NULL;
+    gchar *state_dir;
 
-    g_signal_connect (lightdm_user_list_get_instance (), "user-added", G_CALLBACK (user_added_cb), NULL);
-    g_signal_connect (lightdm_user_list_get_instance (), "user-changed", G_CALLBACK (user_changed_cb), NULL);
-    g_signal_connect (lightdm_user_list_get_instance (), "user-removed", G_CALLBACK (user_removed_cb), NULL);
+    xfce4_greeter->config = g_key_file_new ();
+    g_key_file_load_from_file (xfce4_greeter->config, CONFIG_FILE, G_KEY_FILE_NONE, &error);
+    if (error && !g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+        g_warning ("Failed to load configuration from %s: %s\n", CONFIG_FILE, error->message);
+    g_clear_error (&error);
 
-    model = gtk_tree_view_get_model (user_view);
+    state_dir = g_build_filename (g_get_user_cache_dir (), "lightdm-xfce4-greeter", NULL);
+    g_mkdir_with_parents (state_dir, 0775);
+    xfce4_greeter->state_filename = g_build_filename (state_dir, "state", NULL);
+    g_free (state_dir);
 
-    items = lightdm_user_list_get_users (lightdm_user_list_get_instance ());
-    for (item = items; item; item = item->next)
-    {
-        LightDMUser *user = item->data;
-        const gchar *image;
-
-        image = lightdm_user_get_image (user);
-        if (image)
-            pixbuf = gdk_pixbuf_new_from_file_at_scale (image, 48, 48, TRUE, NULL);
-        if (!pixbuf)
-            pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                               "avatar-default",
-                                               48,
-                                               GTK_ICON_LOOKUP_USE_BUILTIN,
-                                               NULL);
-        /*if (!pixbuf)
-        {
-            pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 48, 48);
-            memset (gdk_pixbuf_get_pixels (pixbuf), 0, gdk_pixbuf_get_height (pixbuf) * gdk_pixbuf_get_rowstride (pixbuf) * gdk_pixbuf_get_n_channels (pixbuf));
-        }*/
-
-        gtk_list_store_append (GTK_LIST_STORE (model), &iter);
-        gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                            U_NAME, lightdm_user_get_name (user),
-                            U_PIXBUF, pixbuf,
-                            U_DISPLAYNAME, lightdm_user_get_display_name (user),
-                            U_WEIGHT, lightdm_user_get_logged_in (user) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
-                            -1);
-    }
-
-    if (lightdm_greeter_get_has_guest_account_hint (greeter))
-    {
-        pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                           "avatar-default",
-                                           48,
-                                           0,
-                                           NULL),
-        gtk_list_store_append (GTK_LIST_STORE (model), &iter);
-        gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                            U_NAME, "*guest",
-                            U_PIXBUF, pixbuf,
-                            U_DISPLAYNAME, _("Guest Account"),
-                            U_WEIGHT, PANGO_WEIGHT_NORMAL,
-                            -1);
-    }
-
-    pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                       "avatar-default",
-                                       48,
-                                       0,
-                                       NULL),
-
-    gtk_list_store_append (GTK_LIST_STORE (model), &iter);
-    gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                        U_NAME, "*other",
-                        U_PIXBUF, pixbuf,
-                        U_DISPLAYNAME, _("Other..."),
-                        U_WEIGHT, PANGO_WEIGHT_NORMAL,
-                        -1);
-
-    last_user = g_key_file_get_value (state, "greeter", "last-user", NULL);
-
-    if (lightdm_greeter_get_select_user_hint (greeter))
-        selected_user = lightdm_greeter_get_select_user_hint (greeter);
-    else if (lightdm_greeter_get_select_guest_hint (greeter))
-        selected_user = "*guest";
-    else if (last_user)
-        selected_user = last_user;
-    else
-        selected_user = NULL;
-
-    if (selected_user && gtk_tree_model_get_iter_first (model, &iter))
-    {
-        do
-        {
-            gchar *name;
-            gboolean matched;
-            gtk_tree_model_get (model, &iter, 0, &name, -1);
-            matched = strcmp (name, selected_user) == 0;
-            g_free (name);
-            if (matched)
-            {
-                gtk_tree_selection_select_iter (gtk_tree_view_get_selection (user_view), &iter);
-                start_authentication (selected_user);
-                break;
-            }
-        } while (gtk_tree_model_iter_next (model, &iter));
-    }
-
-    g_free (last_user);
+    xfce4_greeter->state = g_key_file_new ();
+    g_key_file_load_from_file (xfce4_greeter->state, xfce4_greeter->state_filename, G_KEY_FILE_NONE, &error);
+    if (error && !g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+        g_warning ("Failed to load state from %s: %s\n", xfce4_greeter->state_filename, error->message);
+    g_clear_error (&error);
 }
 
-static cairo_surface_t *
-create_root_surface (GdkScreen *screen)
+int
+init_lightdm_greeter(struct greeter_xfce4 *xfce4_greeter)
 {
-    gint number, width, height;
-    Display *display;
-    Pixmap pixmap;
-    cairo_surface_t *surface;
+    LightDMGreeter *greeter;
 
-    number = gdk_screen_get_number (screen);
-    width = gdk_screen_get_width (screen);
-    height = gdk_screen_get_height (screen);
+    greeter = lightdm_greeter_new ();
+    g_signal_connect (greeter, "show-prompt", G_CALLBACK (show_prompt_cb), xfce4_greeter);
+    g_signal_connect (greeter, "show-message", G_CALLBACK (show_message_cb), xfce4_greeter);
+    g_signal_connect (greeter, "authentication-complete", G_CALLBACK (authentication_complete_cb), xfce4_greeter);
+    g_signal_connect (greeter, "autologin-timer-expired", G_CALLBACK (autologin_timer_expired_cb), xfce4_greeter);
+    if (!lightdm_greeter_connect_sync (greeter, NULL))
+        return -1;
 
-    /* Open a new connection so with Retain Permanent so the pixmap remains when the greeter quits */
-    gdk_flush ();
-    display = XOpenDisplay (gdk_display_get_name (gdk_screen_get_display (screen)));
-    if (!display)
-    {
-        g_warning ("Failed to create root pixmap");
-        return NULL;
-    }
-    XSetCloseDownMode (display, RetainPermanent);
-    pixmap = XCreatePixmap (display, RootWindow (display, number), width, height, DefaultDepth (display, number));
-    XCloseDisplay (display);
+    xfce4_greeter->greeter = greeter;
 
-    /* Convert into a Cairo surface */
-    surface = cairo_xlib_surface_create (GDK_SCREEN_XDISPLAY (screen),
-                                         pixmap,
-                                         GDK_VISUAL_XVISUAL (gdk_screen_get_system_visual (screen)),
-                                         width, height);
-
-    /* Use this pixmap for the background */
-    XSetWindowBackgroundPixmap (GDK_SCREEN_XDISPLAY (screen),
-                                RootWindow (GDK_SCREEN_XDISPLAY (screen), number),
-                                cairo_xlib_surface_get_drawable (surface));
-
-
-    return surface;  
+    return 0;
 }
 
 int
 main (int argc, char **argv)
 {
-    GKeyFile *config;
-    GdkRectangle monitor_geometry;
-    GtkBuilder *builder;
-    GtkTreeModel *model;
-    GList *items, *item;
-    GtkTreeIter iter;
-    GtkListStore *store;
-    GtkTreeViewColumn *column;
-    GtkCellRenderer *renderer;
-    GtkWidget *menuitem, *hbox, *image;
-    gchar *value, *state_dir;
-    GdkPixbuf *background_pixbuf = NULL;
-    #if GTK_CHECK_VERSION (3, 0, 0)
-    GdkRGBA background_color;
-    #endif
-    gint i;
-    GError *error = NULL;
+    struct greeter_xfce4 *xfce4_greeter;
+	xfce4_greeter = g_slice_new0(struct greeter_xfce4);
 
     /* Disable global menus */
     g_unsetenv ("UBUNTU_MENUPROXY");
@@ -755,304 +236,57 @@ main (int argc, char **argv)
 
     gtk_init (&argc, &argv);
 
-    config = g_key_file_new ();
-    g_key_file_load_from_file (config, CONFIG_FILE, G_KEY_FILE_NONE, &error);
-    if (error && !g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-        g_warning ("Failed to load configuration from %s: %s\n", CONFIG_FILE, error->message);
-    g_clear_error (&error);
+    init_config_files(xfce4_greeter);
 
-    state_dir = g_build_filename (g_get_user_cache_dir (), "lightdm-xfce4-greeter", NULL);
-    g_mkdir_with_parents (state_dir, 0775);
-    state_filename = g_build_filename (state_dir, "state", NULL);
-    g_free (state_dir);
-
-    state = g_key_file_new ();
-    g_key_file_load_from_file (state, state_filename, G_KEY_FILE_NONE, &error);
-    if (error && !g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-        g_warning ("Failed to load state from %s: %s\n", state_filename, error->message);
-    g_clear_error (&error);
-
-    greeter = lightdm_greeter_new ();
-    g_signal_connect (greeter, "show-prompt", G_CALLBACK (show_prompt_cb), NULL);  
-    g_signal_connect (greeter, "show-message", G_CALLBACK (show_message_cb), NULL);
-    g_signal_connect (greeter, "authentication-complete", G_CALLBACK (authentication_complete_cb), NULL);
-    g_signal_connect (greeter, "autologin-timer-expired", G_CALLBACK (autologin_timer_expired_cb), NULL);
-    if (!lightdm_greeter_connect_sync (greeter, NULL))
+    if (init_lightdm_greeter(xfce4_greeter) == -1)
         return EXIT_FAILURE;
 
     /* Set default cursor */
     gdk_window_set_cursor (gdk_get_default_root_window (), gdk_cursor_new (GDK_LEFT_PTR));
 
-    /* Load background */
+    init_background_display (xfce4_greeter);
+    init_gtk_default_settings (xfce4_greeter);
 
-    value = g_key_file_get_value (config, "greeter", "background", NULL);
-    #if GTK_CHECK_VERSION (3, 0, 0)
-    if (!value)
-        value = g_strdup ("#000000");
-    if (!gdk_rgba_parse (&background_color, value))
-    #endif
-    {
-        gchar *path;
-        GError *error = NULL;
-
-        if (g_path_is_absolute (value))
-            path = g_strdup (value);
-        else
-            path = g_build_filename (GREETER_DATA_DIR, value, NULL);
-
-        g_debug ("Loading background %s", path);
-        background_pixbuf = gdk_pixbuf_new_from_file (path, &error);
-        if (!background_pixbuf)
-           g_warning ("Failed to load background: %s", error->message);
-        g_clear_error (&error);
-        g_free (path);
-    }
-    #if GTK_CHECK_VERSION (3, 0, 0)
-    else
-        g_debug ("Using background color %s", value);
-    g_free (value);
-    #endif
-
-    /* Set the background */
-    for (i = 0; i < gdk_display_get_n_screens (gdk_display_get_default ()); i++)
-    {
-        GdkScreen *screen;
-        cairo_surface_t *surface;
-        cairo_t *c;
-        int monitor;
-
-        screen = gdk_display_get_screen (gdk_display_get_default (), i);
-        surface = create_root_surface (screen);
-        c = cairo_create (surface);
-
-        for (monitor = 0; monitor < gdk_screen_get_n_monitors (screen); monitor++)
-        {
-            gdk_screen_get_monitor_geometry (screen, monitor, &monitor_geometry);
-
-            if (background_pixbuf)
-            {
-                GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple (background_pixbuf, monitor_geometry.width, monitor_geometry.height, GDK_INTERP_BILINEAR);
-                gdk_cairo_set_source_pixbuf (c, pixbuf, monitor_geometry.x, monitor_geometry.y);
-                g_object_unref (pixbuf);
-            }
-            #if GTK_CHECK_VERSION (3, 0, 0)
-            else
-                gdk_cairo_set_source_rgba (c, &background_color);
-            #endif
-
-            cairo_paint (c);
-        }
-
-        cairo_destroy (c);
-
-        /* Refresh background */
-        gdk_flush ();
-        XClearWindow (GDK_SCREEN_XDISPLAY (screen), RootWindow (GDK_SCREEN_XDISPLAY (screen), i));
-    }
-    if (background_pixbuf)
-        g_object_unref (background_pixbuf);
-
-    /* Set GTK+ settings */
-    value = g_key_file_get_value (config, "greeter", "theme-name", NULL);
-    if (value)
-    {
-        g_debug ("Using theme %s", value);
-        g_object_set (gtk_settings_get_default (), "gtk-theme-name", value, NULL);
-    }
-    g_free (value);
-    g_object_get (gtk_settings_get_default (), "gtk-theme-name", &default_theme_name, NULL);
-    g_debug ("Default theme is '%s'", default_theme_name);
-
-    value = g_key_file_get_value (config, "greeter", "font-name", NULL);
-    if (value)
-    {
-        g_debug ("Using font %s", value);
-        g_object_set (gtk_settings_get_default (), "gtk-font-name", value, NULL);
-    }
-    g_object_get (gtk_settings_get_default (), "gtk-font-name", &default_font_name, NULL);  
-    value = g_key_file_get_value (config, "greeter", "xft-dpi", NULL);
-    if (value)
-        g_object_set (gtk_settings_get_default (), "gtk-xft-dpi", (int) (1024 * atof (value)), NULL);
-    value = g_key_file_get_value (config, "greeter", "xft-antialias", NULL);
-    if (value)
-        g_object_set (gtk_settings_get_default (), "gtk-xft-antialias", strcmp (value, "true") == 0, NULL);
-    g_free (value);
-    value = g_key_file_get_value (config, "greeter", "xft-hintstyle", NULL);
-    if (value)
-        g_object_set (gtk_settings_get_default (), "gtk-xft-hintstyle", value, NULL);
-    g_free (value);
-    value = g_key_file_get_value (config, "greeter", "xft-rgba", NULL);
-    if (value)
-        g_object_set (gtk_settings_get_default (), "gtk-xft-rgba", value, NULL);
-    g_free (value);
-
-    /* Load out installed icons */
-    gtk_icon_theme_append_search_path (gtk_icon_theme_get_default (), GREETER_DATA_DIR);
-    gchar **path;
-    gtk_icon_theme_get_search_path (gtk_icon_theme_get_default (), &path, NULL);
-
-    builder = gtk_builder_new ();
-    if (!gtk_builder_add_from_file (builder, GREETER_DATA_DIR "/greeter.ui", &error))
-    {
-        g_warning ("Error loading UI: %s", error->message);
+    /* Init the widgets. */
+    if(init_greeter_builder (xfce4_greeter) == -1)
         return EXIT_FAILURE;
-    }
-    g_clear_error (&error);
 
-    login_window = GTK_WINDOW (gtk_builder_get_object (builder, "login_window"));
-    login_box = GTK_WIDGET (gtk_builder_get_object (builder, "login_box"));
-    prompt_box = GTK_WIDGET (gtk_builder_get_object (builder, "prompt_box"));
-    prompt_label = GTK_LABEL (gtk_builder_get_object (builder, "prompt_label"));
-    prompt_entry = GTK_ENTRY (gtk_builder_get_object (builder, "prompt_entry"));
-    message_label = GTK_LABEL (gtk_builder_get_object (builder, "message_label"));
-    session_combo = GTK_COMBO_BOX (gtk_builder_get_object (builder, "session_combobox"));
-    language_combo = GTK_COMBO_BOX (gtk_builder_get_object (builder, "language_combobox"));  
-    panel_window = GTK_WINDOW (gtk_builder_get_object (builder, "panel_window"));
+    /* Init the widgest and show user list*/
+    init_panel (xfce4_greeter);
+    init_session_combo (xfce4_greeter);
+    init_language_combo (xfce4_greeter);
+    init_user_view (xfce4_greeter);
 
-    gtk_label_set_text (GTK_LABEL (gtk_builder_get_object (builder, "hostname_label")), lightdm_get_hostname ());
-
-    /* Glade can't handle custom menuitems, so set them up manually */
-    menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "power_menuitem"));
-    #if GTK_CHECK_VERSION (3, 0, 0)
-    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-    #else
-    hbox = gtk_hbox_new (FALSE, 0);
-    #endif
-
-    gtk_widget_show (hbox);
-    gtk_container_add (GTK_CONTAINER (menuitem), hbox);
-    image = gtk_image_new_from_icon_name ("system-shutdown", GTK_ICON_SIZE_MENU);
-    gtk_widget_show (image);
-    gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, TRUE, 0);
-
-    menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "a11y_menuitem"));
-    #if GTK_CHECK_VERSION (3, 0, 0)
-    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-    #else
-    hbox = gtk_hbox_new (FALSE, 0);
-    #endif
-    gtk_widget_show (hbox);
-    gtk_container_add (GTK_CONTAINER (menuitem), hbox);
-    image = gtk_image_new_from_icon_name ("accessibility", GTK_ICON_SIZE_MENU);
-    gtk_widget_show (image);
-    gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, TRUE, 0);
-
-    if (!lightdm_get_can_suspend ())
-        gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (builder, "suspend_menuitem")));
-    if (!lightdm_get_can_hibernate ())
-        gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (builder, "hibernate_menuitem")));
-    if (!lightdm_get_can_restart ())
-        gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (builder, "restart_menuitem")));
-    if (!lightdm_get_can_shutdown ())
-        gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (builder, "shutdown_menuitem")));
-
-    renderer = gtk_cell_renderer_text_new();
-    gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (session_combo), renderer, TRUE);
-    gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (session_combo), renderer, "text", 0);
-    model = gtk_combo_box_get_model (session_combo);
-    items = lightdm_get_sessions ();
-
-    if(g_list_length(items) > 1)
-        gtk_widget_show (GTK_WIDGET (session_combo));
-
-    for (item = items; item; item = item->next)
-    {
-        LightDMSession *session = item->data;
-
-        gtk_list_store_append (GTK_LIST_STORE (model), &iter);
-        gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                            0, lightdm_session_get_name (session),
-                            1, lightdm_session_get_key (session),
-                            -1);
-    }
-    set_session (NULL);
-
-    if (g_key_file_get_boolean (config, "greeter", "show-language-selector", NULL))
-    {
-        gtk_widget_show (GTK_WIDGET (language_combo));
-
-        renderer = gtk_cell_renderer_text_new();
-        gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (language_combo), renderer, TRUE);
-        gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (language_combo), renderer, "text", 0);
-        model = gtk_combo_box_get_model (language_combo);
-        items = lightdm_get_languages ();
-        for (item = items; item; item = item->next)
-        {
-            LightDMLanguage *language = item->data;
-            const gchar *country, *code;
-            gchar *label;
-
-            country = lightdm_language_get_territory (language);
-            if (country)
-                label = g_strdup_printf ("%s - %s", lightdm_language_get_name (language), country);
-            else
-                label = g_strdup (lightdm_language_get_name (language));
-            code = lightdm_language_get_code (language);
-            gchar *modifier = strchr (code, '@');
-            if (modifier != NULL)
-            {
-                gchar *label_new = g_strdup_printf ("%s [%s]", label, modifier+1);
-                g_free (label);
-                label = label_new;
-            }
-
-            gtk_widget_show (GTK_WIDGET (language_combo));
-            gtk_list_store_append (GTK_LIST_STORE (model), &iter);
-            gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                                0, label,
-                                1, code,
-                                -1);
-            g_free (label);
-        }
-        set_language (NULL);
-    }
-
-    user_view = GTK_TREE_VIEW (gtk_builder_get_object (builder, "user_treeview"));
-
-    store = gtk_list_store_new (N_U_COLUMS,
-    					  G_TYPE_STRING,
-    					  GDK_TYPE_PIXBUF,
-    					  G_TYPE_STRING,
-    					  G_TYPE_INT);
-
-    gtk_tree_view_set_model(GTK_TREE_VIEW(user_view), GTK_TREE_MODEL(store));
-
-    column = gtk_tree_view_column_new();
-
-    renderer = gtk_cell_renderer_pixbuf_new();
-    gtk_tree_view_column_pack_start(column, renderer, FALSE);
-    gtk_tree_view_column_set_attributes(column, renderer, "pixbuf", U_PIXBUF, NULL);
-
-    renderer = gtk_cell_renderer_text_new();
-    gtk_tree_view_column_pack_start(column, renderer, TRUE);
-    gtk_tree_view_column_set_attributes(column, renderer, "text", U_DISPLAYNAME, "weight", U_WEIGHT, NULL);
-
-    gtk_tree_view_append_column(GTK_TREE_VIEW(user_view), column);
-
-    if (lightdm_greeter_get_hide_users_hint (greeter))
-        start_authentication ("*other");
+    if (lightdm_greeter_get_hide_users_hint (xfce4_greeter->greeter))
+        start_authentication (xfce4_greeter, "*other");
     else
     {
-        load_user_list ();
-        gtk_widget_show (GTK_WIDGET (user_view));
-    } 
+        load_user_list (xfce4_greeter);
+        gtk_widget_show (GTK_WIDGET (xfce4_greeter->user_view));
+    }
 
-    gtk_builder_connect_signals(builder, greeter);
+    /* Connect the signals and show the widgets. */
+    gtk_builder_connect_signals(xfce4_greeter->builder, xfce4_greeter);
 
-    gtk_widget_show (GTK_WIDGET (login_window));
-    center_window (login_window);
+    gtk_widget_show (GTK_WIDGET (xfce4_greeter->login_window));
+    center_window (xfce4_greeter->login_window);
 
-    gtk_widget_show (GTK_WIDGET (panel_window));
-    GtkAllocation allocation;
-    gtk_widget_get_allocation (GTK_WIDGET (panel_window), &allocation);
-    gdk_screen_get_monitor_geometry (gdk_screen_get_default (), gdk_screen_get_primary_monitor (gdk_screen_get_default ()), &monitor_geometry);
-    gtk_window_resize (panel_window, monitor_geometry.width, allocation.height);
-    gtk_window_move (panel_window, monitor_geometry.x, monitor_geometry.y);
+    show_panel_window (xfce4_greeter);
 
-    gtk_widget_show (GTK_WIDGET (login_window));
-    gdk_window_focus (gtk_widget_get_window (GTK_WIDGET (login_window)), GDK_CURRENT_TIME);
+    gtk_widget_show (GTK_WIDGET (xfce4_greeter->login_window));
+    gdk_window_focus (gtk_widget_get_window (GTK_WIDGET (xfce4_greeter->login_window)), GDK_CURRENT_TIME);
 
     gtk_main ();
+
+    /* Free */
+    g_key_file_free (xfce4_greeter->config);
+    g_key_file_free (xfce4_greeter->state);
+    g_free (xfce4_greeter->state_filename);
+    g_free (xfce4_greeter->default_font_name);
+    g_free (xfce4_greeter->default_theme_name);
+    g_object_unref (G_OBJECT (xfce4_greeter->builder));
+
+    g_slice_free (struct greeter_xfce4, xfce4_greeter);
 
     return EXIT_SUCCESS;
 }

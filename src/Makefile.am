@@ -1,7 +1,13 @@
 sbin_PROGRAMS = lightdm-xfce4-greeter
 
 lightdm_xfce4_greeter_SOURCES = \
-	lightdm-xfce4-greeter.c
+	lightdm-xfce4-greeter.c \
+	lightdm-builder.c \
+	lightdm-language.c \
+	lightdm-panel.c \
+	lightdm-session.c \
+	lightdm-user-view.c \
+	lightdm-xfce4-greeter.h
 
 lightdm_xfce4_greeter_CFLAGS = \
 	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
