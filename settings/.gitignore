@@ -1,0 +1,9 @@
+.deps
+.libs
+*.o
+*.in
+Makefile
+Makefile.in
+lightdm-dialog_ui.h
+xfce4-lightdm-settings.desktop
+xfce4-lightdm-settings
