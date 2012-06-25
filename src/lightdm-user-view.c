@@ -250,6 +250,7 @@ init_user_view (struct greeter_xfce4 *xfce4_greeter)
     GtkCellRenderer *renderer;
     GtkTreeModel *model;
     GtkListStore *store;
+    GtkTreeSelection *selection;
     GtkTreeViewColumn *column;
     GList *items, *item;
     GtkTreeIter iter;
@@ -273,4 +274,7 @@ init_user_view (struct greeter_xfce4 *xfce4_greeter)
     gtk_tree_view_column_set_attributes(column, renderer, "text", U_DISPLAYNAME, "weight", U_WEIGHT, NULL);
 
     gtk_tree_view_append_column(GTK_TREE_VIEW(xfce4_greeter->user_view), column);
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(xfce4_greeter->user_view));
+    g_signal_connect(selection, "changed", G_CALLBACK(user_treeview_selection_changed_cb), xfce4_greeter);
 }
