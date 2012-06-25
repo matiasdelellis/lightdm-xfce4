@@ -59,7 +59,7 @@ get_user_iter (const gchar *username, GtkTreeIter *iter, struct greeter_xfce4 *x
         gchar *name;
         gboolean matched;
 
-        gtk_tree_model_get (model, iter, 0, &name, -1);
+        gtk_tree_model_get (model, iter, U_NAME, &name, -1);
         matched = g_strcmp0 (name, username) == 0;
         g_free (name);
         if (matched)
@@ -211,7 +211,7 @@ load_user_list (struct greeter_xfce4 *xfce4_greeter)
         {
             gchar *name;
             gboolean matched;
-            gtk_tree_model_get (model, &iter, 0, &name, -1);
+            gtk_tree_model_get (model, &iter, U_NAME, &name, -1);
             matched = strcmp (name, selected_user) == 0;
             g_free (name);
             if (matched)
@@ -238,7 +238,7 @@ user_treeview_selection_changed_cb (GtkTreeSelection *selection, struct greeter_
     {
         gchar *user;
 
-        gtk_tree_model_get (GTK_TREE_MODEL (model), &iter, 0, &user, -1);
+        gtk_tree_model_get (GTK_TREE_MODEL (model), &iter, U_NAME, &user, -1);
         start_authentication (xfce4_greeter, user);
         g_free (user);
     }
