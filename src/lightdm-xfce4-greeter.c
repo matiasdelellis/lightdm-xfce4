@@ -223,6 +223,9 @@ main (int argc, char **argv)
     struct greeter_xfce4 *xfce4_greeter;
 	xfce4_greeter = g_slice_new0(struct greeter_xfce4);
 
+    xfce4_greeter->cancelling = FALSE;
+    xfce4_greeter->prompted = FALSE;
+
     /* Disable global menus */
     g_unsetenv ("UBUNTU_MENUPROXY");
 
