@@ -241,6 +241,8 @@ init_greeter_builder (struct greeter_xfce4 *xfce4_greeter)
     xfce4_greeter->panel_window = GTK_WINDOW (gtk_builder_get_object (builder, "panel_window"));
     xfce4_greeter->language_combo = GTK_COMBO_BOX (gtk_builder_get_object (builder, "language_combobox"));
 
+    g_signal_connect (GTK_WIDGET (xfce4_greeter->login_window), "size-allocate", G_CALLBACK (center_window), xfce4_greeter->login_window);
+
     xfce4_greeter->builder = builder;
 
     return 0;

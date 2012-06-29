@@ -271,12 +271,10 @@ main (int argc, char **argv)
     /* Connect the signals and show the widgets. */
     gtk_builder_connect_signals(xfce4_greeter->builder, xfce4_greeter);
 
+    /* Show the login window and panel and set focus. */
     gtk_widget_show (GTK_WIDGET (xfce4_greeter->login_window));
-    center_window (xfce4_greeter->login_window);
-
     show_panel_window (xfce4_greeter);
 
-    gtk_widget_show (GTK_WIDGET (xfce4_greeter->login_window));
     gdk_window_focus (gtk_widget_get_window (GTK_WIDGET (xfce4_greeter->login_window)), GDK_CURRENT_TIME);
 
     gtk_main ();
