@@ -114,9 +114,14 @@ void
 a11y_contrast_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
 {
     if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (widget)))
+    {
         g_object_set (gtk_settings_get_default (), "gtk-theme-name", "HighContrastInverse", NULL);
+        g_object_set (gtk_settings_get_default (), "gtk-icon-theme-name", "HighContrastInverse", NULL);
+    }
     else
         g_object_set (gtk_settings_get_default (), "gtk-theme-name", xfce4_greeter->default_theme_name, NULL);
+        g_object_set (gtk_settings_get_default (), "gtk-icon-theme-name", xfce4_greeter->default_icon_theme_name, NULL);
+    }
 }
 
 void

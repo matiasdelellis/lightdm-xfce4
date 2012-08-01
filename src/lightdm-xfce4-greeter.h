@@ -37,6 +37,7 @@ struct greeter_xfce4 {
     GtkComboBox *language_combo;
     gchar *default_font_name;
     gchar *default_theme_name;
+    gchar *default_icon_theme_name;
     gboolean cancelling;
     gboolean prompted;
 };

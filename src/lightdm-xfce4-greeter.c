@@ -285,6 +285,7 @@ main (int argc, char **argv)
     g_free (xfce4_greeter->state_filename);
     g_free (xfce4_greeter->default_font_name);
     g_free (xfce4_greeter->default_theme_name);
+    g_free (xfce4_greeter->default_icon_theme_name);
     g_object_unref (G_OBJECT (xfce4_greeter->builder));
 
     g_slice_free (struct greeter_xfce4, xfce4_greeter);
