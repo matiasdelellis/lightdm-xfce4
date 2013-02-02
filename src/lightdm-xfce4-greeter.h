@@ -20,7 +20,7 @@
 #include <lightdm-gobject-1/lightdm.h>
 #include <src/lightdm-xfce4-greeter-ui.h>
 
-struct greeter_xfce4 {
+typedef struct _Xfce4Greeter {
     LightDMGreeter *greeter;
     GtkBuilder *builder;
     GKeyFile *config;
@@ -33,6 +33,7 @@ struct greeter_xfce4 {
     GtkTreeView *user_view;
     GtkWidget *login_box;
     GtkWidget *prompt_box;
+    GtkWidget *hostname_logo;
     GtkEntry *prompt_entry;
     GtkComboBox *session_combo;
     GtkComboBox *language_combo;
@@ -41,7 +42,7 @@ struct greeter_xfce4 {
     gchar *default_icon_theme_name;
     gboolean cancelling;
     gboolean prompted;
-};
+} Xfce4Greeter;
 
 enum user_colums {
     U_NAME = 0,
@@ -53,40 +54,40 @@ enum user_colums {
 
 /* lightdm-xfce4-greeter.c */
 
-void start_authentication (struct greeter_xfce4 *xfce4_greeter, const gchar *username);
+void start_authentication (Xfce4Greeter *xfce4_greeter, const gchar *username);
 
 /* lightdm-builder.c */
 
-void show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType type, struct greeter_xfce4 *xfce4_greeter);
-void set_message_label (struct greeter_xfce4 *xfce4_greeter, const gchar *text);
-void show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type, struct greeter_xfce4 *xfce4_greeter);
+void show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType type, Xfce4Greeter *xfce4_greeter);
+void set_message_label (Xfce4Greeter *xfce4_greeter, const gchar *text);
+void show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type, Xfce4Greeter *xfce4_greeter);
 void center_window (GtkWindow *window);
-void init_background_display (struct greeter_xfce4 *xfce4_greeter);
-void init_gtk_default_settings (struct greeter_xfce4 *xfce4_greeter);
-void init_gtk_default_settings (struct greeter_xfce4 *xfce4_greeter);
-int init_greeter_builder (struct greeter_xfce4 *xfce4_greeter);
+void init_background_display (Xfce4Greeter *xfce4_greeter);
+void init_gtk_default_settings (Xfce4Greeter *xfce4_greeter);
+void init_gtk_default_settings (Xfce4Greeter *xfce4_greeter);
+int init_greeter_builder (Xfce4Greeter *xfce4_greeter);
 
 /* lightdm-language.c */
 
-gchar *get_language (struct greeter_xfce4 *xfce4_greeter);
-void set_language (struct greeter_xfce4 *xfce4_greeter, const gchar *language);
-void init_language_combo (struct greeter_xfce4 *xfce4_greeter);
+gchar *get_language (Xfce4Greeter *xfce4_greeter);
+void set_language (Xfce4Greeter *xfce4_greeter, const gchar *language);
+void init_language_combo (Xfce4Greeter *xfce4_greeter);
 
 /* lightdm-panel.c */
 
-void show_panel_window (struct greeter_xfce4 *xfce4_greeter);
-void init_panel (struct greeter_xfce4 *xfce4_greeter);
+void show_panel_window (Xfce4Greeter *xfce4_greeter);
+void init_panel (Xfce4Greeter *xfce4_greeter);
 
 /* lightdm-session.c */
 
-gchar *get_session (struct greeter_xfce4 *xfce4_greeter);
-void set_session (struct greeter_xfce4 *xfce4_greeter, const gchar *session);
-void init_session_combo (struct greeter_xfce4 *xfce4_greeter);
+gchar *get_session (Xfce4Greeter *xfce4_greeter);
+void set_session (Xfce4Greeter *xfce4_greeter, const gchar *session);
+void init_session_combo (Xfce4Greeter *xfce4_greeter);
 
 /* lightdm-user-view.c */
-
-void user_added_cb (LightDMUserList *user_list, LightDMUser *user, struct greeter_xfce4 *xfce4_greeter);
-void user_changed_cb (LightDMUserList *user_list, LightDMUser *user, struct greeter_xfce4 *xfce4_greeter);
-void user_removed_cb (LightDMUserList *user_list, LightDMUser *user, struct greeter_xfce4 *xfce4_greeter);
-void load_user_list (struct greeter_xfce4 *xfce4_greeter);
-void init_user_view (struct greeter_xfce4 *xfce4_greeter);
+void set_user_image_as_hostname_logo (Xfce4Greeter *xfce4_greeter, const gchar *username);
+void user_added_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter);
+void user_changed_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter);
+void user_removed_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter);
+void load_user_list (Xfce4Greeter *xfce4_greeter);
+void init_user_view (Xfce4Greeter *xfce4_greeter);

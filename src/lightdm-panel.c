@@ -11,26 +11,26 @@
 
 #include "lightdm-xfce4-greeter.h"
 
-void suspend_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
+void suspend_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter);
 G_MODULE_EXPORT
 void
-suspend_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
+suspend_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     lightdm_suspend (NULL);
 }
 
-void hibernate_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
+void hibernate_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter);
 G_MODULE_EXPORT
 void
-hibernate_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
+hibernate_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     lightdm_hibernate (NULL);
 }
 
-void restart_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
+void restart_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter);
 G_MODULE_EXPORT
 void
-restart_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
+restart_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     GtkWidget *dialog;
 
@@ -52,10 +52,10 @@ restart_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
     gtk_widget_show (GTK_WIDGET (xfce4_greeter->login_window));
 }
 
-void shutdown_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
+void shutdown_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter);
 G_MODULE_EXPORT
 void
-shutdown_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
+shutdown_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     GtkWidget *dialog;
 
@@ -77,10 +77,10 @@ shutdown_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
     gtk_widget_show (GTK_WIDGET (xfce4_greeter->login_window));
 }
 
-void a11y_font_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
+void a11y_font_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter);
 G_MODULE_EXPORT
 void
-a11y_font_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
+a11y_font_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (widget)))
     {
@@ -108,10 +108,10 @@ a11y_font_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
         g_object_set (gtk_settings_get_default (), "gtk-font-name", xfce4_greeter->default_font_name, NULL);
 }
 
-void a11y_contrast_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
+void a11y_contrast_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter);
 G_MODULE_EXPORT
 void
-a11y_contrast_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
+a11y_contrast_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (widget)))
     {
@@ -126,7 +126,7 @@ a11y_contrast_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
 }
 
 void
-show_panel_window (struct greeter_xfce4 *xfce4_greeter)
+show_panel_window (Xfce4Greeter *xfce4_greeter)
 {
     GtkAllocation allocation;
     GdkRectangle monitor_geometry;
@@ -140,7 +140,7 @@ show_panel_window (struct greeter_xfce4 *xfce4_greeter)
 }
 
 void
-init_panel (struct greeter_xfce4 *xfce4_greeter)
+init_panel (Xfce4Greeter *xfce4_greeter)
 {
     GtkWidget *menuitem, *hbox, *image;
 

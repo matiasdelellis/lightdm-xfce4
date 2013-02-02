@@ -12,7 +12,7 @@
 #include "lightdm-xfce4-greeter.h"
 
 gchar *
-get_session (struct greeter_xfce4 *xfce4_greeter)
+get_session (Xfce4Greeter *xfce4_greeter)
 {
     GtkTreeIter iter;
     gchar *session;
@@ -26,7 +26,7 @@ get_session (struct greeter_xfce4 *xfce4_greeter)
 }
 
 void
-set_session (struct greeter_xfce4 *xfce4_greeter, const gchar *session)
+set_session (Xfce4Greeter *xfce4_greeter, const gchar *session)
 {
     GtkTreeModel *model = gtk_combo_box_get_model (xfce4_greeter->session_combo);
     GtkTreeIter iter;
@@ -62,7 +62,7 @@ set_session (struct greeter_xfce4 *xfce4_greeter, const gchar *session)
 }
 
 void
-init_session_combo (struct greeter_xfce4 *xfce4_greeter)
+init_session_combo (Xfce4Greeter *xfce4_greeter)
 {
     GtkCellRenderer *renderer;
     GtkTreeModel *model;

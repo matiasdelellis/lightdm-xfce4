@@ -12,7 +12,34 @@
 #include "lightdm-xfce4-greeter.h"
 
 void
-user_added_cb (LightDMUserList *user_list, LightDMUser *user, struct greeter_xfce4 *xfce4_greeter)
+set_user_image_as_hostname_logo (Xfce4Greeter *xfce4_greeter, const gchar *username)
+{
+    const gchar *path;
+    LightDMUser *user;
+    GdkPixbuf *image = NULL;
+    GError *error = NULL;
+
+    if(username) {
+        user = lightdm_user_list_get_user_by_name (lightdm_user_list_get_instance (), username);
+        if (user) {
+            path = lightdm_user_get_image (user);
+            if (path) {
+                image = gdk_pixbuf_new_from_file_at_scale (path, 64, 64, FALSE, &error);
+            }
+        }
+    }
+
+    if (image) {
+        gtk_image_set_from_pixbuf (GTK_IMAGE (xfce4_greeter->hostname_logo), image);
+        g_object_unref (image);
+    }
+    else {
+        gtk_image_set_from_icon_name (GTK_IMAGE (xfce4_greeter->hostname_logo), "computer", GTK_ICON_SIZE_DIALOG);
+    }
+}
+
+void
+user_added_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter)
 {
     GtkTreeModel *model;
     GtkTreeIter iter;
@@ -46,7 +73,7 @@ user_added_cb (LightDMUserList *user_list, LightDMUser *user, struct greeter_xfc
 }
 
 static gboolean
-get_user_iter (const gchar *username, GtkTreeIter *iter, struct greeter_xfce4 *xfce4_greeter)
+get_user_iter (const gchar *username, GtkTreeIter *iter, Xfce4Greeter *xfce4_greeter)
 {
     GtkTreeModel *model;
 
@@ -70,7 +97,7 @@ get_user_iter (const gchar *username, GtkTreeIter *iter, struct greeter_xfce4 *x
 }
 
 void
-user_changed_cb (LightDMUserList *user_list, LightDMUser *user, struct greeter_xfce4 *xfce4_greeter)
+user_changed_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter)
 {
     GtkTreeModel *model;
     GtkTreeIter iter;
@@ -106,7 +133,7 @@ user_changed_cb (LightDMUserList *user_list, LightDMUser *user, struct greeter_x
 }
 
 void
-user_removed_cb (LightDMUserList *user_list, LightDMUser *user, struct greeter_xfce4 *xfce4_greeter)
+user_removed_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter)
 {
     GtkTreeModel *model;
     GtkTreeIter iter;
@@ -119,7 +146,7 @@ user_removed_cb (LightDMUserList *user_list, LightDMUser *user, struct greeter_x
 }
 
 void
-load_user_list (struct greeter_xfce4 *xfce4_greeter)
+load_user_list (Xfce4Greeter *xfce4_greeter)
 {
     const GList *items, *item;
     GtkTreeModel *model;
@@ -226,10 +253,10 @@ load_user_list (struct greeter_xfce4 *xfce4_greeter)
     g_free (last_user);
 }
 
-void user_treeview_selection_changed_cb (GtkTreeSelection *selection, struct greeter_xfce4 *xfce4_greeter);
+void user_treeview_selection_changed_cb (GtkTreeSelection *selection, Xfce4Greeter *xfce4_greeter);
 G_MODULE_EXPORT
 void
-user_treeview_selection_changed_cb (GtkTreeSelection *selection, struct greeter_xfce4 *xfce4_greeter)
+user_treeview_selection_changed_cb (GtkTreeSelection *selection, Xfce4Greeter *xfce4_greeter)
 {
     GtkTreeModel *model;
     GtkTreeIter iter;
@@ -245,7 +272,7 @@ user_treeview_selection_changed_cb (GtkTreeSelection *selection, struct greeter_
 }
 
 void
-init_user_view (struct greeter_xfce4 *xfce4_greeter)
+init_user_view (Xfce4Greeter *xfce4_greeter)
 {
     GtkCellRenderer *renderer;
     GtkTreeModel *model;

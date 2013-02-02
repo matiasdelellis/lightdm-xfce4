@@ -12,7 +12,7 @@
 #include "lightdm-xfce4-greeter.h"
 
 void
-start_authentication (struct greeter_xfce4 *xfce4_greeter, const gchar *username)
+start_authentication (Xfce4Greeter *xfce4_greeter, const gchar *username)
 {
     gchar *data;
     gsize data_length;
@@ -64,7 +64,7 @@ start_authentication (struct greeter_xfce4 *xfce4_greeter, const gchar *username
 }
 
 static void
-cancel_authentication (struct greeter_xfce4 *xfce4_greeter)
+cancel_authentication (Xfce4Greeter *xfce4_greeter)
 {
     /* If in authentication then stop that first */
     xfce4_greeter->cancelling = FALSE;
@@ -86,7 +86,7 @@ cancel_authentication (struct greeter_xfce4 *xfce4_greeter)
 }
 
 static void
-start_session (struct greeter_xfce4 *xfce4_greeter)
+start_session (Xfce4Greeter *xfce4_greeter)
 {
     gchar *language;
     gchar *session;
@@ -105,10 +105,10 @@ start_session (struct greeter_xfce4 *xfce4_greeter)
     g_free (session);
 }
 
-void login_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
+void login_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter);
 G_MODULE_EXPORT
 void
-login_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
+login_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     gtk_widget_set_sensitive (GTK_WIDGET (xfce4_greeter->prompt_entry), FALSE);
     set_message_label (xfce4_greeter, "");
@@ -121,16 +121,16 @@ login_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
         start_authentication (xfce4_greeter, lightdm_greeter_get_authentication_user (xfce4_greeter->greeter));
 }
 
-void cancel_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter);
+void cancel_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter);
 G_MODULE_EXPORT
 void
-cancel_cb (GtkWidget *widget, struct greeter_xfce4 *xfce4_greeter)
+cancel_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     cancel_authentication (xfce4_greeter);
 }
 
 static void
-authentication_complete_cb (LightDMGreeter *greeter, struct greeter_xfce4 *xfce4_greeter)
+authentication_complete_cb (LightDMGreeter *greeter, Xfce4Greeter *xfce4_greeter)
 {
     gtk_entry_set_text (xfce4_greeter->prompt_entry, "");
 
@@ -167,7 +167,7 @@ sigterm_cb (int signum)
 }
 
 void
-init_config_files (struct greeter_xfce4 *xfce4_greeter)
+init_config_files (Xfce4Greeter *xfce4_greeter)
 {
     GError *error = NULL;
     gchar *state_dir;
@@ -191,7 +191,7 @@ init_config_files (struct greeter_xfce4 *xfce4_greeter)
 }
 
 int
-init_lightdm_greeter(struct greeter_xfce4 *xfce4_greeter)
+init_lightdm_greeter(Xfce4Greeter *xfce4_greeter)
 {
     LightDMGreeter *greeter;
 
@@ -211,8 +211,9 @@ init_lightdm_greeter(struct greeter_xfce4 *xfce4_greeter)
 int
 main (int argc, char **argv)
 {
-    struct greeter_xfce4 *xfce4_greeter;
-	xfce4_greeter = g_slice_new0(struct greeter_xfce4);
+    Xfce4Greeter *xfce4_greeter;
+
+    xfce4_greeter = g_slice_new0(Xfce4Greeter);
 
     xfce4_greeter->cancelling = FALSE;
     xfce4_greeter->prompted = FALSE;
@@ -279,7 +280,7 @@ main (int argc, char **argv)
     g_free (xfce4_greeter->default_icon_theme_name);
     g_object_unref (G_OBJECT (xfce4_greeter->builder));
 
-    g_slice_free (struct greeter_xfce4, xfce4_greeter);
+    g_slice_free (Xfce4Greeter, xfce4_greeter);
 
     return EXIT_SUCCESS;
 }

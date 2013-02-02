@@ -12,7 +12,7 @@
 #include "lightdm-xfce4-greeter.h"
 
 void
-show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType type, struct greeter_xfce4 *xfce4_greeter)
+show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType type, Xfce4Greeter *xfce4_greeter)
 {
     xfce4_greeter->prompted = TRUE;
 
@@ -26,14 +26,14 @@ show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType ty
 }
 
 void
-set_message_label (struct greeter_xfce4 *xfce4_greeter, const gchar *text)
+set_message_label (Xfce4Greeter *xfce4_greeter, const gchar *text)
 {
     gtk_widget_set_visible (GTK_WIDGET (xfce4_greeter->message_label), strcmp (text, "") != 0);
     gtk_label_set_text (xfce4_greeter->message_label, text);
 }
 
 void
-show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type, struct greeter_xfce4 *xfce4_greeter)
+show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type, Xfce4Greeter *xfce4_greeter)
 {
     set_message_label (xfce4_greeter, text);
 }
@@ -92,7 +92,7 @@ create_root_surface (GdkScreen *screen)
 }
 
 void
-init_background_display (struct greeter_xfce4 *xfce4_greeter)
+init_background_display (Xfce4Greeter *xfce4_greeter)
 {
     GdkRectangle monitor_geometry;
     GdkPixbuf *background_pixbuf = NULL;
@@ -174,7 +174,7 @@ init_background_display (struct greeter_xfce4 *xfce4_greeter)
 }
 
 void
-init_gtk_default_settings (struct greeter_xfce4 *xfce4_greeter)
+init_gtk_default_settings (Xfce4Greeter *xfce4_greeter)
 {
     gchar *value, **path;
 
@@ -227,7 +227,7 @@ init_gtk_default_settings (struct greeter_xfce4 *xfce4_greeter)
 }
 
 int
-init_greeter_builder (struct greeter_xfce4 *xfce4_greeter)
+init_greeter_builder (Xfce4Greeter *xfce4_greeter)
 {
     GtkBuilder *builder;
     GError *error = NULL;
@@ -246,6 +246,7 @@ init_greeter_builder (struct greeter_xfce4 *xfce4_greeter)
     xfce4_greeter->login_window = GTK_WINDOW (gtk_builder_get_object (builder, "login_window"));
     xfce4_greeter->login_box = GTK_WIDGET (gtk_builder_get_object (builder, "login_box"));
     xfce4_greeter->prompt_box = GTK_WIDGET (gtk_builder_get_object (builder, "prompt_box"));
+    xfce4_greeter->hostname_logo = GTK_WIDGET (gtk_builder_get_object (builder, "hostname_logo"));
     xfce4_greeter->prompt_label = GTK_LABEL (gtk_builder_get_object (builder, "prompt_label"));
     xfce4_greeter->prompt_entry = GTK_ENTRY (gtk_builder_get_object (builder, "prompt_entry"));
     xfce4_greeter->message_label = GTK_LABEL (gtk_builder_get_object (builder, "message_label"));

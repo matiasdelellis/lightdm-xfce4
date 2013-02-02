@@ -12,7 +12,7 @@
 #include "lightdm-xfce4-greeter.h"
 
 gchar *
-get_language (struct greeter_xfce4 *xfce4_greeter)
+get_language (Xfce4Greeter *xfce4_greeter)
 {
     GtkTreeIter iter;
     gchar *language;
@@ -26,7 +26,7 @@ get_language (struct greeter_xfce4 *xfce4_greeter)
 }
 
 void
-set_language (struct greeter_xfce4 *xfce4_greeter, const gchar *language)
+set_language (Xfce4Greeter *xfce4_greeter, const gchar *language)
 {
     GtkTreeModel *model = gtk_combo_box_get_model (xfce4_greeter->language_combo);
     GtkTreeIter iter;
@@ -57,7 +57,7 @@ set_language (struct greeter_xfce4 *xfce4_greeter, const gchar *language)
 }
 
 void
-init_language_combo (struct greeter_xfce4 *xfce4_greeter)
+init_language_combo (Xfce4Greeter *xfce4_greeter)
 {
     GtkCellRenderer *renderer;
     GtkTreeModel *model;
