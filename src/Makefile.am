@@ -1,6 +1,10 @@
 sbin_PROGRAMS = lightdm-xfce4-greeter
 
+lightdm_xfce4_greeter_built_sources = \
+  lightdm-xfce4-greeter-ui.h
+
 lightdm_xfce4_greeter_SOURCES = \
+  $(lightdm_gtk_greeter_built_sources) \
 	lightdm-xfce4-greeter.c \
 	lightdm-builder.c \
 	lightdm-language.c \
@@ -9,16 +13,38 @@ lightdm_xfce4_greeter_SOURCES = \
 	lightdm-user-view.c \
 	lightdm-xfce4-greeter.h
 
-lightdm_xfce4_greeter_CFLAGS = \
+AM_CPPFLAGS = \
+  -I$(top_srcdir) \
 	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
 	-DLOCALEDIR=\""$(localedir)"\" \
 	-DGREETER_DATA_DIR=\""$(datadir)/lightdm-xfce4-greeter"\" \
 	-DCONFIG_FILE=\""$(sysconfdir)/lightdm/lightdm-xfce4-greeter.conf"\" \
-	$(GREETER_CFLAGS) \
 	$(WARN_CFLAGS)
 
+lightdm_xfce4_greeter_CFLAGS = \
+  $(GTK_CFLAGS) \
+  $(GMODULE_CFLAGS) \
+  $(LIGHTDMGOBJECT_CFLAGS) \
+  $(LIBX11_CFLAGS)
+
 lightdm_xfce4_greeter_LDADD = \
-	$(GREETER_LIBS)
+	$(GTK_LIBS) \
+	$(GMODULE_LIBS) \
+	$(LIGHTDMGOBJECT_LIBS) \
+	$(LIBX11_LIBS)
+
+lightdm-xfce4-greeter-ui.h: lightdm-xfce4-greeter.glade
+	exo-csource --static --strip-comments --strip-content --name=lightdm_xfce4_greeter_ui $< >$@
+
+if MAINTAINER_MODE
 
 DISTCLEANFILES = \
-	Makefile.in
+  $(lightdm_xfce4_greeter_built_sources)
+
+BUILT_SOURCES = \
+  $(lightdm_xfce4_greeter_built_sources)
+
+endif
+
+EXTRA_DIST = \
+        lightdm-xfce4-greeter.glade

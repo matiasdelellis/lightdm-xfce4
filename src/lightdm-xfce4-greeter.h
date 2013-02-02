@@ -18,6 +18,7 @@
 #include <gdk/gdkx.h>
 
 #include <lightdm-gobject-1/lightdm.h>
+#include <src/lightdm-xfce4-greeter-ui.h>
 
 struct greeter_xfce4 {
     LightDMGreeter *greeter;

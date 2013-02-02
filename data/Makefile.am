@@ -1,6 +1,3 @@
-greeterdatadir = $(datadir)/lightdm-xfce4-greeter
-dist_greeterdata_DATA = greeter.ui
-
 xgreetersdir = $(datadir)/xgreeters
 dist_xgreeters_DATA = lightdm-xfce4-greeter.desktop
 

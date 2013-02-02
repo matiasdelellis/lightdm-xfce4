@@ -150,7 +150,7 @@ init_background_display (struct greeter_xfce4 *xfce4_greeter)
             {
                 GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple (background_pixbuf, monitor_geometry.width, monitor_geometry.height, GDK_INTERP_BILINEAR);
                 if (!gdk_pixbuf_get_has_alpha (pixbuf))
-                    p = gdk_pixbuf_add_alpha (pixbuf, FALSE, 255, 255, 255);
+                    pixbuf = gdk_pixbuf_add_alpha (pixbuf, FALSE, 255, 255, 255);
                 gdk_cairo_set_source_pixbuf (c, pixbuf, monitor_geometry.x, monitor_geometry.y);
                 g_object_unref (pixbuf);
             }
@@ -233,7 +233,8 @@ init_greeter_builder (struct greeter_xfce4 *xfce4_greeter)
     GError *error = NULL;
 
     builder = gtk_builder_new ();
-    if (!gtk_builder_add_from_file (builder, GREETER_DATA_DIR "/greeter.ui", &error))
+    if (!gtk_builder_add_from_string (builder, lightdm_xfce4_greeter_ui,
+                                      lightdm_xfce4_greeter_ui_length, &error))
     {
         g_warning ("Error loading UI: %s", error->message);
         return -1;

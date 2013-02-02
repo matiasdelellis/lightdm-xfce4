@@ -1,9 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(lightdm-xfce4-greeter, 1.1.5)
+AM_INIT_AUTOMAKE([1.8 dist-bzip2 tar-ustar no-dist-gzip])
 AC_CONFIG_MACRO_DIR(m4)
-AC_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE
+AC_CONFIG_HEADERS(config.h)
 LT_INIT
 AM_PROG_CC_C_O
 AM_MAINTAINER_MODE
@@ -20,12 +20,10 @@ AC_ARG_WITH([gtk3],
             [enable experimental support for gtk3])],
             [GTK_VER="gtk+-3.0"],[GTK_VER="gtk+-2.0"])
 
-PKG_CHECK_MODULES(GREETER, [
-    $GTK_VER
-    x11
-    liblightdm-gobject-1
-    gmodule-export-2.0
-])
+PKG_CHECK_MODULES([GTK], [$GTK_VER])
+PKG_CHECK_MODULES([GMODULE], [gmodule-export-2.0])
+PKG_CHECK_MODULES([LIGHTDMGOBJECT], [liblightdm-gobject-1 >= 1.3.5])
+PKG_CHECK_MODULES([LIBX11], [x11])
 
 dnl ###########################################################################
 dnl Dependencies to dialog

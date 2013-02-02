@@ -148,7 +148,6 @@
                     <child>
                       <object class="GtkButton" id="login_button">
                         <property name="label" translatable="yes">Login</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -164,7 +163,6 @@
                     <child>
                       <object class="GtkButton" id="cancel_button">
                         <property name="label" translatable="yes">Cancel</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -209,7 +207,6 @@
         <property name="pack_direction">rtl</property>
         <child>
           <object class="GtkMenuItem" id="power_menuitem">
-            <property name="use_action_appearance">False</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child type="submenu">
@@ -218,7 +215,6 @@
                 <property name="can_focus">False</property>
                 <child>
                   <object class="GtkMenuItem" id="suspend_menuitem">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Suspend</property>
@@ -227,7 +223,6 @@
                 </child>
                 <child>
                   <object class="GtkMenuItem" id="hibernate_menuitem">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Hibernate</property>
@@ -236,7 +231,6 @@
                 </child>
                 <child>
                   <object class="GtkMenuItem" id="restart_menuitem">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Restart...</property>
@@ -245,7 +239,6 @@
                 </child>
                 <child>
                   <object class="GtkMenuItem" id="shutdown_menuitem">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Shutdown...</property>
@@ -258,7 +251,6 @@
         </child>
         <child>
           <object class="GtkMenuItem" id="a11y_menuitem">
-            <property name="use_action_appearance">False</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child type="submenu">
@@ -267,7 +259,6 @@
                 <property name="can_focus">False</property>
                 <child>
                   <object class="GtkCheckMenuItem" id="large_font_menuitem">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Large Font</property>
@@ -276,7 +267,6 @@
                 </child>
                 <child>
                   <object class="GtkCheckMenuItem" id="high_contrast_menuitem">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">High Contrast</property>
