@@ -161,15 +161,6 @@ authentication_complete_cb (LightDMGreeter *greeter, struct greeter_xfce4 *xfce4
 }
 
 static void
-autologin_timer_expired_cb (LightDMGreeter *greeter, struct greeter_xfce4 *xfce4_greeter)
-{
-    if (lightdm_greeter_get_autologin_guest_hint (xfce4_greeter->greeter))
-        start_authentication (xfce4_greeter, "*guest");
-    else if (lightdm_greeter_get_autologin_user_hint (xfce4_greeter->greeter))
-        start_authentication (xfce4_greeter, lightdm_greeter_get_autologin_user_hint (xfce4_greeter->greeter));
-}
-
-static void
 sigterm_cb (int signum)
 {
     exit (0);
@@ -208,7 +199,7 @@ init_lightdm_greeter(struct greeter_xfce4 *xfce4_greeter)
     g_signal_connect (greeter, "show-prompt", G_CALLBACK (show_prompt_cb), xfce4_greeter);
     g_signal_connect (greeter, "show-message", G_CALLBACK (show_message_cb), xfce4_greeter);
     g_signal_connect (greeter, "authentication-complete", G_CALLBACK (authentication_complete_cb), xfce4_greeter);
-    g_signal_connect (greeter, "autologin-timer-expired", G_CALLBACK (autologin_timer_expired_cb), xfce4_greeter);
+    g_signal_connect (greeter, "autologin-timer-expired", G_CALLBACK (lightdm_greeter_authenticate_autologin), xfce4_greeter);
     if (!lightdm_greeter_connect_sync (greeter, NULL))
         return -1;
 
