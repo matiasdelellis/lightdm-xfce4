@@ -149,6 +149,8 @@ init_background_display (struct greeter_xfce4 *xfce4_greeter)
             if (background_pixbuf)
             {
                 GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple (background_pixbuf, monitor_geometry.width, monitor_geometry.height, GDK_INTERP_BILINEAR);
+                if (!gdk_pixbuf_get_has_alpha (pixbuf))
+                    p = gdk_pixbuf_add_alpha (pixbuf, FALSE, 255, 255, 255);
                 gdk_cairo_set_source_pixbuf (c, pixbuf, monitor_geometry.x, monitor_geometry.y);
                 g_object_unref (pixbuf);
             }
