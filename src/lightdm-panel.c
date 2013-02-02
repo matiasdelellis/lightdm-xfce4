@@ -170,12 +170,19 @@ init_panel (struct greeter_xfce4 *xfce4_greeter)
     gtk_widget_show (image);
     gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, TRUE, 0);
 
+    menuitem = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "suspend_menuitem"));
     if (!lightdm_get_can_suspend ())
-        gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "suspend_menuitem")));
+        gtk_widget_set_sensitive (menuitem, FALSE);
+
+    menuitem = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "hibernate_menuitem"));
     if (!lightdm_get_can_hibernate ())
-        gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "hibernate_menuitem")));
+        gtk_widget_set_sensitive (menuitem, FALSE);
+
+    menuitem = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "restart_menuitem"));
     if (!lightdm_get_can_restart ())
-        gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "restart_menuitem")));
+        gtk_widget_set_sensitive (menuitem, FALSE);
+
+    menuitem = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "shutdown_menuitem"));
     if (!lightdm_get_can_shutdown ())
-        gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "shutdown_menuitem")));
+        gtk_widget_set_sensitive (menuitem, FALSE);
 }
