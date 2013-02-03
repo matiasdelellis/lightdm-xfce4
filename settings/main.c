@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2012 Matias De lellis <mati86_dl@gmail.com>
+ *  Copyright (c) 2012-2013 Matias De lellis <mati86_dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -58,6 +58,49 @@ static GOptionEntry    opt_entries[] =
 };
 
 static void
+lightdm_settings_save (GtkBuilder *builder)
+{
+    GKeyFile *config;
+    gchar *value = NULL, *data = NULL;
+    GError *error = NULL;
+    GObject *object;
+    gsize length;
+
+    g_return_if_fail (GTK_IS_BUILDER (builder));
+
+    config = g_key_file_new ();
+    g_key_file_load_from_file (config, CONFIG_FILE, G_KEY_FILE_NONE, &error);
+
+    if (error && !g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+        g_warning ("Failed to load configuration from %s: %s\n", CONFIG_FILE, error->message);
+    g_clear_error (&error);
+
+    object = gtk_builder_get_object (builder, "background-filechooser");
+    value = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(object));
+    g_key_file_set_string(config, "greeter", "background", value);
+    g_free(value);
+
+    object = gtk_builder_get_object (builder, "lang-checkbutton");
+    g_key_file_set_boolean (config, "greeter", "show-language-selector",
+                            gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON(object)));
+
+    object = gtk_builder_get_object (builder, "theme-entry");
+    g_key_file_set_string (config, "greeter", "theme-name",
+                           gtk_entry_get_text (GTK_ENTRY(object)));
+
+    object = gtk_builder_get_object (builder, "font-button");
+    g_key_file_set_string (config, "greeter", "font-name",
+                           gtk_font_button_get_font_name (GTK_FONT_BUTTON(object)));
+
+    data = g_key_file_to_data(config, &length, NULL);
+    if(!g_file_set_contents(CONFIG_FILE, data, length, &error))
+        g_critical("Unable to write preferences file : %s", error->message);
+    g_free(data);
+
+    g_key_file_free(config);
+}
+
+static void
 lightdm_settings_update (GtkBuilder *builder)
 {
     GKeyFile *config;
@@ -92,9 +135,22 @@ lightdm_settings_update (GtkBuilder *builder)
 
     object = gtk_builder_get_object (builder, "font-button");
     g_return_if_fail (GTK_IS_FONT_BUTTON (object));
-    value = g_key_file_get_value (config, "greeter", "gtk-font-name", NULL);
+    value = g_key_file_get_value (config, "greeter", "font-name", NULL);
     if (value)
         gtk_font_button_set_font_name (GTK_FONT_BUTTON(object), value);
+
+    g_key_file_free(config);
+}
+
+static void
+lightdm_settings_dialog_response (GtkDialog  *dialog,
+                                  gint        response_id,
+                                  GtkBuilder *builder)
+{
+    if(response_id == 1)
+        lightdm_settings_save (builder);
+
+    gtk_main_quit();
 }
 
 gint
@@ -160,7 +216,7 @@ main (gint argc, gchar **argv)
             dialog = gtk_builder_get_object (builder, "dialog");
 
             gtk_widget_show (GTK_WIDGET (dialog));
-            g_signal_connect (dialog, "response", G_CALLBACK (gtk_main_quit), NULL);
+            g_signal_connect (dialog, "response", G_CALLBACK (lightdm_settings_dialog_response), builder);
 
             /* To prevent the settings dialog to be saved in the session */
             gdk_set_sm_client_id ("FAKE ID");
