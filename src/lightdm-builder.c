@@ -98,15 +98,19 @@ init_background_display (Xfce4Greeter *xfce4_greeter)
     GdkPixbuf *background_pixbuf = NULL;
     #if GTK_CHECK_VERSION (3, 0, 0)
     GdkRGBA background_color;
+    #else
+    GdkColor background_color;
     #endif
     gint i;
     gchar *value;
 
     value = g_key_file_get_value (xfce4_greeter->config, "greeter", "background", NULL);
-    #if GTK_CHECK_VERSION (3, 0, 0)
     if (!value)
-        value = g_strdup ("#000000");
+        value = g_strdup ("#ffffff");
+    #if GTK_CHECK_VERSION (3, 0, 0)
     if (!gdk_rgba_parse (&background_color, value))
+    #else
+    if (!gdk_color_parse (value, &background_color))
     #endif
     {
         gchar *path;
@@ -154,9 +158,11 @@ init_background_display (Xfce4Greeter *xfce4_greeter)
                 gdk_cairo_set_source_pixbuf (c, pixbuf, monitor_geometry.x, monitor_geometry.y);
                 g_object_unref (pixbuf);
             }
-            #if GTK_CHECK_VERSION (3, 0, 0)
             else
+            #if GTK_CHECK_VERSION (3, 0, 0)
                 gdk_cairo_set_source_rgba (c, &background_color);
+            #else
+                gdk_cairo_set_source_color (c, &background_color);
             #endif
 
             cairo_paint (c);
@@ -168,9 +174,9 @@ init_background_display (Xfce4Greeter *xfce4_greeter)
         gdk_flush ();
         XClearWindow (GDK_SCREEN_XDISPLAY (screen), RootWindow (GDK_SCREEN_XDISPLAY (screen), i));
     }
+
     if (background_pixbuf)
         g_object_unref (background_pixbuf);
-
 }
 
 void
