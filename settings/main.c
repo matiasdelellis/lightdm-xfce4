@@ -110,6 +110,11 @@ lightdm_settings_update (GtkBuilder *builder)
 
     g_return_if_fail (GTK_IS_BUILDER (builder));
 
+    if (geteuid () != 0) {
+        object = gtk_builder_get_object (builder, "dialog");
+        gtk_widget_set_sensitive (GTK_WIDGET (object), FALSE);
+    }
+
     config = g_key_file_new ();
     g_key_file_load_from_file (config, CONFIG_FILE, G_KEY_FILE_NONE, &error);
     if (error && !g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
