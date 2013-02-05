@@ -65,6 +65,7 @@ lightdm_settings_save (GtkBuilder *builder)
     GError *error = NULL;
     GObject *object;
     gsize length;
+    GdkColor background_color;
 
     g_return_if_fail (GTK_IS_BUILDER (builder));
 
@@ -75,10 +76,20 @@ lightdm_settings_save (GtkBuilder *builder)
         g_warning ("Failed to load configuration from %s: %s\n", CONFIG_FILE, error->message);
     g_clear_error (&error);
 
-    object = gtk_builder_get_object (builder, "background-filechooser");
-    value = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(object));
-    g_key_file_set_string(config, "greeter", "background", value);
-    g_free(value);
+    object = gtk_builder_get_object (builder, "radio-button-image");
+    if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(object))) {
+        object = gtk_builder_get_object (builder, "background-filechooser");
+        value = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(object));
+    }
+    else {
+        object = gtk_builder_get_object (builder, "background-colorbutton");
+        gtk_color_button_get_color(GTK_COLOR_BUTTON(object), &background_color);
+        value = gdk_color_to_string(&background_color);
+    }
+    if(value) {
+        g_key_file_set_string(config, "greeter", "background", value);
+        g_free(value);
+    }
 
     object = gtk_builder_get_object (builder, "lang-checkbutton");
     g_key_file_set_boolean (config, "greeter", "show-language-selector",
@@ -107,6 +118,7 @@ lightdm_settings_update (GtkBuilder *builder)
     gchar *value = NULL;
     GError *error = NULL;
     GObject *object;
+    GdkColor background_color;
 
     g_return_if_fail (GTK_IS_BUILDER (builder));
 
@@ -121,11 +133,21 @@ lightdm_settings_update (GtkBuilder *builder)
         g_warning ("Failed to load configuration from %s: %s\n", CONFIG_FILE, error->message);
     g_clear_error (&error);
 
-    object = gtk_builder_get_object (builder, "background-filechooser");
-    g_return_if_fail (GTK_IS_FILE_CHOOSER_BUTTON (object));
     value = g_key_file_get_string(config, "greeter", "background", NULL);
-    if (value)
-          gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(object), value);
+    if (value) {
+        if (gdk_color_parse (value, &background_color)) {
+            object = gtk_builder_get_object (builder, "background-colorbutton");
+            gtk_color_button_set_color(GTK_COLOR_BUTTON(object), &background_color);
+
+            object = gtk_builder_get_object (builder, "radio-button-color");
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(object), TRUE);
+
+        }
+        else {
+            object = gtk_builder_get_object (builder, "background-filechooser");
+            gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(object), value);
+        }
+    }
 
     object = gtk_builder_get_object (builder, "lang-checkbutton");
     g_return_if_fail (GTK_IS_CHECK_BUTTON (object));
