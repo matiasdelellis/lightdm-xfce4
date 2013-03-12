@@ -10,6 +10,7 @@
  */
 
 #include "lightdm-xfce4-greeter.h"
+#include "lightdm-user-list.h"
 
 void
 start_authentication (Xfce4Greeter *xfce4_greeter, const gchar *username)
@@ -266,6 +267,12 @@ main (int argc, char **argv)
     /* Show the login window and panel and set focus. */
     gtk_widget_show (GTK_WIDGET (xfce4_greeter->login_window));
     show_panel_window (xfce4_greeter);
+
+		GtkWidget *vbox = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "vbox2"));
+		LightdmUserList *user_list = lightdm_user_list_new(xfce4_greeter);
+		lightdm_user_list_init(user_list);
+		gtk_box_pack_start(GTK_BOX(vbox), lightdm_user_list_get_widget(user_list), TRUE, FALSE, 0);
+		gtk_widget_show_all(lightdm_user_list_get_widget(user_list));
 
     gdk_window_focus (gtk_widget_get_window (GTK_WIDGET (xfce4_greeter->login_window)), GDK_CURRENT_TIME);
 

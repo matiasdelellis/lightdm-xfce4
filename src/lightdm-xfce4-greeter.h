@@ -9,6 +9,9 @@
  * license.
  */
 
+#ifndef __LIGHTDM_XFCE4_H__
+#define __LIGHTDM_XFCE4_H__
+
 #include <stdlib.h>
 #include <locale.h>
 #include <gtk/gtk.h>
@@ -19,6 +22,8 @@
 
 #include <lightdm-gobject-1/lightdm.h>
 #include <src/lightdm-xfce4-greeter-ui.h>
+
+G_BEGIN_DECLS;
 
 typedef struct _Xfce4Greeter {
     LightDMGreeter *greeter;
@@ -91,3 +96,7 @@ void user_changed_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greete
 void user_removed_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter);
 void load_user_list (Xfce4Greeter *xfce4_greeter);
 void init_user_view (Xfce4Greeter *xfce4_greeter);
+
+G_END_DECLS;
+
+#endif /* !__LIGHTDM_XFCE4_H__ */

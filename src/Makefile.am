@@ -11,6 +11,10 @@ lightdm_xfce4_greeter_SOURCES = \
 	lightdm-panel.c \
 	lightdm-session.c \
 	lightdm-user-view.c \
+	lightdm-user-button.c \
+	lightdm-user-button.h \
+	lightdm-user-list.c \
+	lightdm-user-list.h \
 	lightdm-xfce4-greeter.h
 
 AM_CPPFLAGS = \
