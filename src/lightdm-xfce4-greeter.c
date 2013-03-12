@@ -81,6 +81,7 @@ cancel_authentication (Xfce4Greeter *xfce4_greeter)
         start_authentication (xfce4_greeter, "*other");
     else
     {
+        gtk_widget_show_all (xfce4_greeter->users_box);
         gtk_widget_hide (xfce4_greeter->login_box);
     }
 }
@@ -251,8 +252,8 @@ main (int argc, char **argv)
     init_session_combo (xfce4_greeter);
     init_language_combo (xfce4_greeter);
 
-    if (lightdm_greeter_get_hide_users_hint (xfce4_greeter->greeter))
-        start_authentication (xfce4_greeter, "*other");
+    /*if (lightdm_greeter_get_hide_users_hint (xfce4_greeter->greeter))
+        start_authentication (xfce4_greeter, "*other");*/
 
     /* Connect the signals and show the widgets. */
     gtk_builder_connect_signals(xfce4_greeter->builder, xfce4_greeter);
@@ -263,9 +264,22 @@ main (int argc, char **argv)
 
 		GtkWidget *hbox = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "users_box"));
 		LightdmUserList *user_list = lightdm_user_list_new(xfce4_greeter);
-		lightdm_user_list_init(user_list);
-		gtk_box_pack_start(GTK_BOX(hbox), lightdm_user_list_get_widget(user_list), TRUE, FALSE, 0);
-		gtk_widget_show_all(lightdm_user_list_get_widget(user_list));
+
+		xfce4_greeter->users_box = lightdm_user_list_get_widget(user_list);
+		gtk_box_pack_start(GTK_BOX(hbox), xfce4_greeter->users_box, TRUE, FALSE, 0);
+
+		const gchar *selected_user = NULL;
+		gchar *last_user = g_key_file_get_value (xfce4_greeter->state, "greeter", "last-user", NULL);
+		if (lightdm_greeter_get_select_user_hint (xfce4_greeter->greeter))
+			selected_user = lightdm_greeter_get_select_user_hint (xfce4_greeter->greeter);
+		else if (lightdm_greeter_get_select_guest_hint (xfce4_greeter->greeter))
+			selected_user = "*guest";
+		else if (last_user)
+			selected_user = last_user;
+		else
+			selected_user = NULL;
+
+		lightdm_user_list_select_user(user_list, selected_user);
 
     gdk_window_focus (gtk_widget_get_window (GTK_WIDGET (xfce4_greeter->login_window)), GDK_CURRENT_TIME);
 

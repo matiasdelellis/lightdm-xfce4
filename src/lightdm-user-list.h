@@ -19,17 +19,11 @@ G_BEGIN_DECLS;
 
 typedef struct _LightdmUserList LightdmUserList;
 
-GtkWidget *
-lightdm_user_list_get_widget(LightdmUserList *user_list);
+void        lightdm_user_list_select_user (LightdmUserList *user_list, const gchar *username);
+GtkWidget * lightdm_user_list_get_widget  (LightdmUserList *user_list);
 
-void
-lightdm_user_list_free(LightdmUserList *user_list);
-
-void
-lightdm_user_list_init(LightdmUserList *lightdm_user_list);
-
-LightdmUserList *
-lightdm_user_list_new(Xfce4Greeter *xfce4_greeter);
+void              lightdm_user_list_free (LightdmUserList *user_list);
+LightdmUserList * lightdm_user_list_new  (Xfce4Greeter *xfce4_greeter);
 
 G_END_DECLS;
 

@@ -18,16 +18,59 @@
 #include "lightdm-xfce4-greeter.h"
 
 struct _LightdmUserList {
-	GtkWidget *vbox;
+	GtkWidget *hbox;
 	Xfce4Greeter *xfce4_greeter;
 };
 
+/*
+ * Public API
+ */
+
 void
-user_button_handler(GtkButton *button, Xfce4Greeter *xfce4_greeter)
+lightdm_user_list_select_user(LightdmUserList *user_list, const gchar *username)
+{
+	GList *list;
+	GtkWidget *children;
+
+	if(!username) {
+		gtk_widget_show_all(GTK_WIDGET(user_list->hbox));
+		start_authentication (user_list->xfce4_greeter, username);
+		return;
+	}
+
+	list = gtk_container_get_children (GTK_CONTAINER(user_list->hbox));
+	if(list) {
+		while (list) {
+			children = list->data;
+			if(g_strcmp0 (username, lightdm_user_button_get_user(LIGHTDM_USER_BUTTON(children))) == 0) {
+				gtk_widget_show_all(GTK_WIDGET(children));
+			}
+			else {
+				gtk_widget_hide(GTK_WIDGET(children));
+			}
+			list = list->next;
+		}
+		g_list_free(list);
+	}
+	start_authentication (user_list->xfce4_greeter, username);
+}
+
+GtkWidget *
+lightdm_user_list_get_widget  (LightdmUserList *user_list)
+{
+	return user_list->hbox;
+}
+
+/*
+ * Private API
+ */
+
+static void
+lightdm_user_button_handler(GtkButton *button, LightdmUserList *user_list)
 {
 	const gchar *user = lightdm_user_button_get_user(LIGHTDM_USER_BUTTON(button));
 
-	start_authentication (xfce4_greeter, user);
+	lightdm_user_list_select_user(user_list, user);
 }
 
 static void
@@ -39,9 +82,10 @@ lightdm_user_list_append_user(LightdmUserList *user_list, const gchar *username,
 	lightdm_user_button_set_display_name(user_button, display_name);
 
 	g_signal_connect(G_OBJECT(user_button), "clicked",
-	                 G_CALLBACK(user_button_handler), user_list->xfce4_greeter);
+	                 G_CALLBACK(lightdm_user_button_handler), user_list);
 
-	gtk_box_pack_start(GTK_BOX(user_list->vbox), GTK_WIDGET(user_button), TRUE, FALSE, 0);
+	gtk_widget_show_all(GTK_WIDGET(user_button));
+	gtk_box_pack_start(GTK_BOX(user_list->hbox), GTK_WIDGET(user_button), TRUE, FALSE, 0);
 }
 
 static void
@@ -52,22 +96,19 @@ lightdm_user_list_append_lightdm_user(LightdmUserList *user_list, LightDMUser *u
 	                              lightdm_user_get_display_name(user));
 }
 
-GtkWidget *
-lightdm_user_list_get_widget(LightdmUserList *user_list)
-{
-	return user_list->vbox;
-}
-
+/*
+ * Constructions.
+ */
 void
 lightdm_user_list_free(LightdmUserList *user_list)
 {
 	GList *list;
 	GtkWidget *children;
 
-	list = gtk_container_get_children (GTK_CONTAINER(user_list->vbox));
+	list = gtk_container_get_children (GTK_CONTAINER(user_list->hbox));
 	if(list) {
 		children = list->data;
-		gtk_container_remove(GTK_CONTAINER(user_list->vbox), children);
+		gtk_container_remove(GTK_CONTAINER(user_list->hbox), children);
 		gtk_widget_destroy(GTK_WIDGET(children));
 		g_list_free(list);
 	}
@@ -78,11 +119,7 @@ void
 lightdm_user_list_init(LightdmUserList *lightdm_user_list)
 {
 	const GList *items, *item;
-	gchar *last_user;
-	const gchar *selected_user;
-	GdkPixbuf *pixbuf = NULL;
 	LightDMUser *user;
-	const gchar *image;
 
 	items = lightdm_user_list_get_users (lightdm_user_list_get_instance ());
 	for (item = items; item; item = item->next) {
@@ -100,19 +137,23 @@ LightdmUserList *
 lightdm_user_list_new(Xfce4Greeter *xfce4_greeter)
 {
 	LightdmUserList *user_list;
-	GtkWidget *vbox;
+	GtkWidget *hbox;
 
 	user_list = g_slice_new0(LightdmUserList);
 
 	#if GTK_CHECK_VERSION (3, 0, 0)
-	vbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_box_set_homogeneous(vbox, TRUE);
+	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+	gtk_box_set_homogeneous(hbox, TRUE);
 	#else
-	vbox = gtk_hbox_new (TRUE, 0);
+	hbox = gtk_hbox_new (TRUE, 0);
 	#endif
 
-	user_list->vbox = vbox;
+	user_list->hbox = hbox;
 	user_list->xfce4_greeter = xfce4_greeter;
+
+	lightdm_user_list_init(user_list);
+
+	gtk_widget_show(hbox);
 
 	return user_list;
 }

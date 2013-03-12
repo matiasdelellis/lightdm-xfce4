@@ -61,6 +61,7 @@ lightdm_user_button_init (LightdmUserButton *user_button)
 	user_button->label = label;
 
 	gtk_container_add(GTK_CONTAINER(user_button), vbox);
+	gtk_widget_show_all(vbox);
 }
 
 static void
