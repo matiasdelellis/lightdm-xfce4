@@ -35,7 +35,6 @@ typedef struct _Xfce4Greeter {
     GtkWindow *panel_window;
     GtkLabel *message_label;
     GtkLabel *prompt_label;
-    GtkTreeView *user_view;
     GtkWidget *login_box;
     GtkWidget *prompt_box;
     GtkWidget *hostname_logo;
@@ -48,14 +47,6 @@ typedef struct _Xfce4Greeter {
     gboolean cancelling;
     gboolean prompted;
 } Xfce4Greeter;
-
-enum user_colums {
-    U_NAME = 0,
-    U_PIXBUF,
-    U_DISPLAYNAME,
-    U_WEIGHT,
-    N_U_COLUMS
-};
 
 /* lightdm-xfce4-greeter.c */
 
@@ -88,14 +79,6 @@ void init_panel (Xfce4Greeter *xfce4_greeter);
 gchar *get_session (Xfce4Greeter *xfce4_greeter);
 void set_session (Xfce4Greeter *xfce4_greeter, const gchar *session);
 void init_session_combo (Xfce4Greeter *xfce4_greeter);
-
-/* lightdm-user-view.c */
-void set_user_image_as_hostname_logo (Xfce4Greeter *xfce4_greeter, const gchar *username);
-void user_added_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter);
-void user_changed_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter);
-void user_removed_cb (LightDMUserList *user_list, LightDMUser *user, Xfce4Greeter *xfce4_greeter);
-void load_user_list (Xfce4Greeter *xfce4_greeter);
-void init_user_view (Xfce4Greeter *xfce4_greeter);
 
 G_END_DECLS;
 

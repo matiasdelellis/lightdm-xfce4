@@ -52,10 +52,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkTreeView" id="user_treeview">
-                <property name="can_focus">True</property>
-                <property name="headers_visible">False</property>
-                <property name="enable_grid_lines">horizontal</property>
+              <object class="GtkHBox" id="users_box">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <placeholder/>
+                </child>
               </object>
               <packing>
                 <property name="expand">True</property>

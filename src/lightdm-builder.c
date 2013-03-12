@@ -256,7 +256,6 @@ init_greeter_builder (Xfce4Greeter *xfce4_greeter)
     xfce4_greeter->prompt_label = GTK_LABEL (gtk_builder_get_object (builder, "prompt_label"));
     xfce4_greeter->prompt_entry = GTK_ENTRY (gtk_builder_get_object (builder, "prompt_entry"));
     xfce4_greeter->message_label = GTK_LABEL (gtk_builder_get_object (builder, "message_label"));
-    xfce4_greeter->user_view = GTK_TREE_VIEW (gtk_builder_get_object (builder, "user_treeview"));
     xfce4_greeter->session_combo = GTK_COMBO_BOX (gtk_builder_get_object (builder, "session_combobox"));
     xfce4_greeter->panel_window = GTK_WINDOW (gtk_builder_get_object (builder, "panel_window"));
     xfce4_greeter->language_combo = GTK_COMBO_BOX (gtk_builder_get_object (builder, "language_combobox"));

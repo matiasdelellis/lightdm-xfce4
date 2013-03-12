@@ -10,7 +10,6 @@ lightdm_xfce4_greeter_SOURCES = \
 	lightdm-language.c \
 	lightdm-panel.c \
 	lightdm-session.c \
-	lightdm-user-view.c \
 	lightdm-user-button.c \
 	lightdm-user-button.h \
 	lightdm-user-list.c \
