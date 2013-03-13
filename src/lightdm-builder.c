@@ -247,8 +247,6 @@ init_greeter_builder (Xfce4Greeter *xfce4_greeter)
     }
     g_clear_error (&error);
 
-    gtk_label_set_text (GTK_LABEL (gtk_builder_get_object (builder, "hostname_label")), lightdm_get_hostname ());
-
     xfce4_greeter->login_window = GTK_WINDOW (gtk_builder_get_object (builder, "login_window"));
     xfce4_greeter->login_box = GTK_WIDGET (gtk_builder_get_object (builder, "login_box"));
     xfce4_greeter->prompt_box = GTK_WIDGET (gtk_builder_get_object (builder, "prompt_box"));
