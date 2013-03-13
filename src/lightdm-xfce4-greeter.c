@@ -62,6 +62,7 @@ start_authentication (Xfce4Greeter *xfce4_greeter, const gchar *username)
 
         lightdm_greeter_authenticate (xfce4_greeter->greeter, username);
     }
+    set_login_button_label(xfce4_greeter, username);
 }
 
 static void

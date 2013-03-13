@@ -36,6 +36,7 @@ typedef struct _Xfce4Greeter {
     GtkLabel *message_label;
     GtkLabel *prompt_label;
     GtkWidget *login_box;
+    GtkWidget *login_button;
     GtkWidget *prompt_box;
     GtkWidget *users_box;
     GtkEntry *prompt_entry;
@@ -55,6 +56,7 @@ void start_authentication (Xfce4Greeter *xfce4_greeter, const gchar *username);
 /* lightdm-builder.c */
 
 void show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType type, Xfce4Greeter *xfce4_greeter);
+void set_login_button_label (Xfce4Greeter *xfce4_greeter, const gchar *username);
 void set_message_label (Xfce4Greeter *xfce4_greeter, const gchar *text);
 void show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type, Xfce4Greeter *xfce4_greeter);
 void center_window (GtkWindow *window);

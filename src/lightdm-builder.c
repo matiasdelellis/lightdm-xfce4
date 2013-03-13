@@ -26,6 +26,24 @@ show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType ty
 }
 
 void
+set_login_button_label (Xfce4Greeter *xfce4_greeter, const gchar *username)
+{
+        LightDMUser *user;
+        gboolean logged_in = FALSE;
+
+        user = lightdm_user_list_get_user_by_name (lightdm_user_list_get_instance (), username);
+        /* Show 'Unlock' instead of 'Log In' for an already logged in user */
+        logged_in = user && lightdm_user_get_logged_in (user);
+        if (logged_in)
+            gtk_button_set_label (GTK_BUTTON(xfce4_greeter->login_button), _("Unlock"));
+        else
+            gtk_button_set_label (GTK_BUTTON(xfce4_greeter->login_button), _("Log In"));
+        /* and disable the session and language comboboxes */
+        gtk_widget_set_sensitive (GTK_WIDGET (xfce4_greeter->session_combo), !logged_in);
+        gtk_widget_set_sensitive (GTK_WIDGET (xfce4_greeter->language_combo), !logged_in);
+}
+
+void
 set_message_label (Xfce4Greeter *xfce4_greeter, const gchar *text)
 {
     gtk_widget_set_visible (GTK_WIDGET (xfce4_greeter->message_label), strcmp (text, "") != 0);
@@ -249,6 +267,7 @@ init_greeter_builder (Xfce4Greeter *xfce4_greeter)
 
     xfce4_greeter->login_window = GTK_WINDOW (gtk_builder_get_object (builder, "login_window"));
     xfce4_greeter->login_box = GTK_WIDGET (gtk_builder_get_object (builder, "login_box"));
+    xfce4_greeter->login_button = GTK_WIDGET (gtk_builder_get_object (builder, "login_button"));
     xfce4_greeter->prompt_box = GTK_WIDGET (gtk_builder_get_object (builder, "prompt_box"));
     xfce4_greeter->prompt_label = GTK_LABEL (gtk_builder_get_object (builder, "prompt_label"));
     xfce4_greeter->prompt_entry = GTK_ENTRY (gtk_builder_get_object (builder, "prompt_entry"));
