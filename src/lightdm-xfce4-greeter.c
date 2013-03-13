@@ -262,11 +262,17 @@ main (int argc, char **argv)
     gtk_widget_show (GTK_WIDGET (xfce4_greeter->login_window));
     show_panel_window (xfce4_greeter);
 
-		GtkWidget *hbox = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "users_box"));
+		GtkWidget *hbox = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "vertical_box"));
+
 		LightdmUserList *user_list = lightdm_user_list_new(xfce4_greeter);
 
 		xfce4_greeter->users_box = lightdm_user_list_get_widget(user_list);
+
+		gtk_box_pack_start(GTK_BOX(hbox), xfce4_greeter->login_box, TRUE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(hbox), xfce4_greeter->users_box, TRUE, FALSE, 0);
+
+		GtkWidget *parent = gtk_widget_get_parent(xfce4_greeter->users_box);
+		gtk_box_reorder_child(GTK_BOX(parent), xfce4_greeter->users_box, 0);
 
 		const gchar *selected_user = NULL;
 		gchar *last_user = g_key_file_get_value (xfce4_greeter->state, "greeter", "last-user", NULL);
