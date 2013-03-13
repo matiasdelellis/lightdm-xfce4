@@ -37,7 +37,6 @@ typedef struct _Xfce4Greeter {
     GtkLabel *prompt_label;
     GtkWidget *login_box;
     GtkWidget *prompt_box;
-    GtkWidget *hostname_logo;
     GtkWidget *users_box;
     GtkEntry *prompt_entry;
     GtkComboBox *session_combo;
