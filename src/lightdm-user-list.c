@@ -115,7 +115,7 @@ lightdm_user_list_free(LightdmUserList *user_list)
 	g_slice_free(LightdmUserList, user_list);
 }
 
-void
+static void
 lightdm_user_list_init(LightdmUserList *lightdm_user_list)
 {
 	const GList *items, *item;

@@ -62,7 +62,6 @@ void show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessage
 void center_window (GtkWindow *window);
 void init_background_display (Xfce4Greeter *xfce4_greeter);
 void init_gtk_default_settings (Xfce4Greeter *xfce4_greeter);
-void init_gtk_default_settings (Xfce4Greeter *xfce4_greeter);
 int init_greeter_builder (Xfce4Greeter *xfce4_greeter);
 
 /* lightdm-language.c */

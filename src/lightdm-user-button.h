@@ -26,10 +26,12 @@ typedef struct _LightdmUserButton      LightdmUserButton;
 #define LIGHTDM_IS_USER_BUTTON_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), LIGHTDM_TYPE_USER_BUTTON))
 #define LIGHTDM_USER_BUTTON_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), LIGHTDM_TYPE_USER_BUTTON, LightdmUserButtonClass))
 
-void         lightdm_user_button_set_display_name(LightdmUserButton *user_button, const gchar *display_name);
-const gchar* lightdm_user_button_get_user(LightdmUserButton *user_button);
+void               lightdm_user_button_set_display_name (LightdmUserButton *user_button, const gchar *display_name);
+const gchar*       lightdm_user_button_get_user         (LightdmUserButton *user_button);
 
-LightdmUserButton *lightdm_user_button_new(const gchar *username);
+LightdmUserButton *lightdm_user_button_new              (const gchar *username);
+
+GType lightdm_user_button_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS;
 

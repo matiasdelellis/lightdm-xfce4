@@ -15,26 +15,29 @@
 void
 start_authentication (Xfce4Greeter *xfce4_greeter, const gchar *username)
 {
-    gchar *data;
+    gchar *data = NULL;
     gsize data_length;
     GError *error = NULL;
 
     xfce4_greeter->cancelling = FALSE;
     xfce4_greeter->prompted = FALSE;
 
-    g_key_file_set_value (xfce4_greeter->state, "greeter", "last-user", username);
-    data = g_key_file_to_data (xfce4_greeter->state, &data_length, &error);
-    if (error)
-        g_warning ("Failed to save state file: %s", error->message);
-    g_clear_error (&error);
-    if (data)
-    {
-        g_file_set_contents (xfce4_greeter->state_filename, data, data_length, &error);
+    if (username) {
+        g_key_file_set_value (xfce4_greeter->state, "greeter", "last-user", username);
+
+        data = g_key_file_to_data (xfce4_greeter->state, &data_length, &error);
         if (error)
             g_warning ("Failed to save state file: %s", error->message);
         g_clear_error (&error);
+
+        if (data) {
+            g_file_set_contents (xfce4_greeter->state_filename, data, data_length, &error);
+            if (error)
+                g_warning ("Failed to save state file: %s", error->message);
+            g_clear_error (&error);
+            g_free (data);
+        }
     }
-    g_free (data);
 
     if (strcmp (username, "*other") == 0)
     {
@@ -168,7 +171,7 @@ sigterm_cb (int signum)
     exit (0);
 }
 
-void
+static void
 init_config_files (Xfce4Greeter *xfce4_greeter)
 {
     GError *error = NULL;
@@ -192,7 +195,7 @@ init_config_files (Xfce4Greeter *xfce4_greeter)
     g_clear_error (&error);
 }
 
-int
+static int
 init_lightdm_greeter(Xfce4Greeter *xfce4_greeter)
 {
     LightDMGreeter *greeter;
@@ -214,6 +217,10 @@ int
 main (int argc, char **argv)
 {
     Xfce4Greeter *xfce4_greeter;
+    LightdmUserList *user_list;
+    GtkWidget *hbox, *parent;
+    const gchar *selected_user = NULL;
+    gchar *last_user;
 
     xfce4_greeter = g_slice_new0(Xfce4Greeter);
 
@@ -263,30 +270,29 @@ main (int argc, char **argv)
     gtk_widget_show (GTK_WIDGET (xfce4_greeter->login_window));
     show_panel_window (xfce4_greeter);
 
-		GtkWidget *hbox = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "vertical_box"));
+    hbox = GTK_WIDGET (gtk_builder_get_object (xfce4_greeter->builder, "vertical_box"));
 
-		LightdmUserList *user_list = lightdm_user_list_new(xfce4_greeter);
+    user_list = lightdm_user_list_new(xfce4_greeter);
 
-		xfce4_greeter->users_box = lightdm_user_list_get_widget(user_list);
+    xfce4_greeter->users_box = lightdm_user_list_get_widget(user_list);
 
-		gtk_box_pack_start(GTK_BOX(hbox), xfce4_greeter->login_box, TRUE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(hbox), xfce4_greeter->users_box, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), xfce4_greeter->login_box, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), xfce4_greeter->users_box, TRUE, FALSE, 0);
 
-		GtkWidget *parent = gtk_widget_get_parent(xfce4_greeter->users_box);
-		gtk_box_reorder_child(GTK_BOX(parent), xfce4_greeter->users_box, 0);
+	parent = gtk_widget_get_parent(xfce4_greeter->users_box);
+	gtk_box_reorder_child(GTK_BOX(parent), xfce4_greeter->users_box, 0);
 
-		const gchar *selected_user = NULL;
-		gchar *last_user = g_key_file_get_value (xfce4_greeter->state, "greeter", "last-user", NULL);
-		if (lightdm_greeter_get_select_user_hint (xfce4_greeter->greeter))
-			selected_user = lightdm_greeter_get_select_user_hint (xfce4_greeter->greeter);
-		else if (lightdm_greeter_get_select_guest_hint (xfce4_greeter->greeter))
-			selected_user = "*guest";
-		else if (last_user)
-			selected_user = last_user;
-		else
-			selected_user = NULL;
+	last_user = g_key_file_get_value (xfce4_greeter->state, "greeter", "last-user", NULL);
+	if (lightdm_greeter_get_select_user_hint (xfce4_greeter->greeter))
+		selected_user = lightdm_greeter_get_select_user_hint (xfce4_greeter->greeter);
+	else if (lightdm_greeter_get_select_guest_hint (xfce4_greeter->greeter))
+		selected_user = "*guest";
+	else if (last_user)
+		selected_user = last_user;
+	else
+		selected_user = NULL;
 
-		lightdm_user_list_select_user(user_list, selected_user);
+	lightdm_user_list_select_user(user_list, selected_user);
 
     gdk_window_focus (gtk_widget_get_window (GTK_WIDGET (xfce4_greeter->login_window)), GDK_CURRENT_TIME);
 

@@ -185,12 +185,9 @@ main (gint argc, gchar **argv)
 {
     GObject          *dialog = NULL;
     GObject          *plug_child;
-    GObject          *checkbutton;
     GtkWidget        *plug;
     GtkBuilder       *builder;
     GError           *error = NULL;
-    GObject          *object;
-    guint             i;
 
     /* Setup translation domain */
     xfce_textdomain (GETTEXT_PACKAGE, LOCALEDIR, "UTF-8");

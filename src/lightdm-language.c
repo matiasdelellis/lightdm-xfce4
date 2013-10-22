@@ -78,7 +78,7 @@ init_language_combo (Xfce4Greeter *xfce4_greeter)
         {
             LightDMLanguage *language = item->data;
             const gchar *country, *code;
-            gchar *label;
+            gchar *label, *modifier = NULL;
 
             country = lightdm_language_get_territory (language);
             if (country)
@@ -86,7 +86,7 @@ init_language_combo (Xfce4Greeter *xfce4_greeter)
             else
                 label = g_strdup (lightdm_language_get_name (language));
             code = lightdm_language_get_code (language);
-            gchar *modifier = strchr (code, '@');
+            modifier = strchr (code, '@');
             if (modifier != NULL)
             {
                 gchar *label_new = g_strdup_printf ("%s [%s]", label, modifier+1);
