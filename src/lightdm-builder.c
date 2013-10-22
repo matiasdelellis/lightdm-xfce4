@@ -28,19 +28,22 @@ show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType ty
 void
 set_login_button_label (Xfce4Greeter *xfce4_greeter, const gchar *username)
 {
-        LightDMUser *user;
-        gboolean logged_in = FALSE;
+    LightDMUser *user;
+    gboolean logged_in = FALSE;
 
-        user = lightdm_user_list_get_user_by_name (lightdm_user_list_get_instance (), username);
-        /* Show 'Unlock' instead of 'Log In' for an already logged in user */
-        logged_in = user && lightdm_user_get_logged_in (user);
-        if (logged_in)
-            gtk_button_set_label (GTK_BUTTON(xfce4_greeter->login_button), _("Unlock"));
-        else
-            gtk_button_set_label (GTK_BUTTON(xfce4_greeter->login_button), _("Log In"));
-        /* and disable the session and language comboboxes */
-        gtk_widget_set_sensitive (GTK_WIDGET (xfce4_greeter->session_combo), !logged_in);
-        gtk_widget_set_sensitive (GTK_WIDGET (xfce4_greeter->language_combo), !logged_in);
+    user = lightdm_user_list_get_user_by_name (lightdm_user_list_get_instance (), username);
+    if (user && lightdm_greeter_get_lock_hint (xfce4_greeter->greeter))
+        logged_in = lightdm_user_get_logged_in (user);
+
+    /* Show 'Unlock' instead of 'Log In' for an already logged in user */
+    if (logged_in)
+        gtk_button_set_label (GTK_BUTTON(xfce4_greeter->login_button), _("Unlock"));
+    else
+        gtk_button_set_label (GTK_BUTTON(xfce4_greeter->login_button), _("Log In"));
+
+    /* and disable the session and language comboboxes */
+    gtk_widget_set_sensitive (GTK_WIDGET (xfce4_greeter->session_combo), !logged_in);
+    gtk_widget_set_sensitive (GTK_WIDGET (xfce4_greeter->language_combo), !logged_in);
 }
 
 void
