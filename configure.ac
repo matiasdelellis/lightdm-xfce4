@@ -15,21 +15,27 @@ dnl ###########################################################################
 dnl Dependencies to greeter
 dnl ###########################################################################
 
-AC_ARG_WITH([gtk3],
-            [AS_HELP_STRING([--with-gtk3],
-            [enable experimental support for gtk3])],
-            [GTK_VER="gtk+-3.0"],[GTK_VER="gtk+-2.0"])
-
-PKG_CHECK_MODULES([GTK], [$GTK_VER])
 PKG_CHECK_MODULES([GMODULE], [gmodule-export-2.0])
 PKG_CHECK_MODULES([LIGHTDMGOBJECT], [liblightdm-gobject-1 >= 1.3.5])
 PKG_CHECK_MODULES([LIBX11], [x11])
 
 dnl ###########################################################################
-dnl Dependencies to dialog
+dnl Dependencies to dialog and greeter
 dnl ###########################################################################
-XDT_CHECK_PACKAGE([GTK], [gtk+-2.0], [2.20.0])
-XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-1], [4.9.0])
+
+AC_ARG_WITH([gtk3],
+            [AS_HELP_STRING([--with-gtk3],
+            [enable experimental support for gtk3])],
+            [CFLAGS="$CFLAGS -Wno-deprecated-declarations"],
+            [with_gtk3=no])
+
+AS_IF([test "x$with_gtk3" != xno],
+	[XDT_CHECK_PACKAGE([GTK], [gtk+-3.0], [3.0.0])],
+	[XDT_CHECK_PACKAGE([GTK], [gtk+-2.0], [2.24.0])])
+
+AS_IF([test "x$with_gtk3" != xno],
+	[XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-2], [4.10.0])],
+	[XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-1], [4.8.0])])
 
 # ===================================================== #
 #             Check for debugging support               #
@@ -60,6 +66,7 @@ AC_OUTPUT
 echo ""
 echo "Build Configuration for $PACKAGE version $VERSION"
 echo ""
-echo "  Prefix.....: ${prefix}"
-echo "  Gtk version: ${GTK_VER}"
+echo "  Gtk version used...: $GTK_VERSION"
+echo "  Prefix.............: ${prefix}"
+echo "  Debug enabled......: $enable_debug"
 echo ""

@@ -143,7 +143,7 @@ lightdm_user_list_new(Xfce4Greeter *xfce4_greeter)
 
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_box_set_homogeneous(hbox, TRUE);
+	gtk_box_set_homogeneous(GTK_BOX(hbox), TRUE);
 	#else
 	hbox = gtk_hbox_new (TRUE, 0);
 	#endif

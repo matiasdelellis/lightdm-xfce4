@@ -46,12 +46,16 @@
 #include "lightdm-dialog_ui.h"
 
 /* GOptionEntry entry stuff */
+#if !GTK_CHECK_VERSION (3, 0, 0)
 static GdkNativeWindow opt_socket_id = 0;
+#endif
 static gboolean        opt_version = FALSE;
 static GOptionEntry    opt_entries[] =
 {
+    #if !GTK_CHECK_VERSION (3, 0, 0)
     { "socket-id", 's', G_OPTION_FLAG_IN_MAIN, G_OPTION_ARG_INT,
       &opt_socket_id, N_("Settings manager socket"), N_("SOCKET ID") },
+    #endif
     { "version", 'v', 0, G_OPTION_ARG_NONE,
       &opt_version, N_("Version information"), NULL },
     { NULL }
@@ -184,8 +188,10 @@ gint
 main (gint argc, gchar **argv)
 {
     GObject          *dialog = NULL;
+    #if !GTK_CHECK_VERSION (3, 0, 0)
     GObject          *plug_child;
     GtkWidget        *plug;
+    #endif
     GtkBuilder       *builder;
     GError           *error = NULL;
 
@@ -233,6 +239,15 @@ main (gint argc, gchar **argv)
     {
         lightdm_settings_update(builder);
 
+        #if GTK_CHECK_VERSION (3, 0, 0)
+        /* Get the dialog widget */
+        dialog = gtk_builder_get_object (builder, "dialog");
+
+        gtk_widget_show (GTK_WIDGET (dialog));
+        g_signal_connect (dialog, "response", G_CALLBACK (lightdm_settings_dialog_response), builder);
+
+        gtk_main ();
+        #else
         /* Wait for the manager to complete... */
         if (G_UNLIKELY (opt_socket_id == 0))
         {
@@ -268,6 +283,7 @@ main (gint argc, gchar **argv)
             /* Enter main loop */
             gtk_main ();
         }
+        #endif
 
         if (dialog != NULL)
             gtk_widget_destroy (GTK_WIDGET (dialog));
