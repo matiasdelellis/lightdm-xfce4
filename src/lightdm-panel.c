@@ -33,6 +33,7 @@ void
 restart_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     GtkWidget *dialog;
+    GtkWidget *image;
 
     gtk_widget_hide (GTK_WIDGET (xfce4_greeter->login_window));
 
@@ -40,8 +41,18 @@ restart_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
                                      GTK_DIALOG_MODAL,
                                      GTK_MESSAGE_OTHER,
                                      GTK_BUTTONS_NONE,
-                                     "%s", _("Are you sure you want to close all programs and restart the computer?"));
+                                     "%s", _("Restart"));
     gtk_dialog_add_buttons (GTK_DIALOG (dialog), _("Return To Login"), FALSE, _("Restart"), TRUE, NULL);
+
+    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%s", _("Are you sure you want to close all programs and restart the computer?"));
+
+#if GTK_CHECK_VERSION (3, 0, 0)
+    image = gtk_image_new_from_icon_name("view-refresh-symbolic", GTK_ICON_SIZE_DIALOG);
+#else
+    image = gtk_image_new_from_icon_name("view-refresh", GTK_ICON_SIZE_DIALOG);
+#endif
+    gtk_message_dialog_set_image(GTK_MESSAGE_DIALOG(dialog), image);
+
     gtk_widget_show_all (dialog);
     center_window (GTK_WINDOW (dialog));
 
@@ -58,6 +69,7 @@ void
 shutdown_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
 {
     GtkWidget *dialog;
+    GtkWidget *image;
 
     gtk_widget_hide (GTK_WIDGET (xfce4_greeter->login_window));
 
@@ -65,8 +77,17 @@ shutdown_cb (GtkWidget *widget, Xfce4Greeter *xfce4_greeter)
                                      GTK_DIALOG_MODAL,
                                      GTK_MESSAGE_OTHER,
                                      GTK_BUTTONS_NONE,
-                                     "%s", _("Are you sure you want to close all programs and shutdown the computer?"));
+                                     "%s", _("Shutdown"));
     gtk_dialog_add_buttons (GTK_DIALOG (dialog), _("Return To Login"), FALSE, _("Shutdown"), TRUE, NULL);
+    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%s", _("Are you sure you want to close all programs and shutdown the computer?"));
+
+#if GTK_CHECK_VERSION (3, 0, 0)
+    image = gtk_image_new_from_icon_name("system-shutdown-symbolic", GTK_ICON_SIZE_DIALOG);
+#else
+    image = gtk_image_new_from_icon_name("system-shutdown", GTK_ICON_SIZE_DIALOG);
+#endif
+    gtk_message_dialog_set_image(GTK_MESSAGE_DIALOG(dialog), image);
+
     gtk_widget_show_all (dialog);
     center_window (GTK_WINDOW (dialog));
 
